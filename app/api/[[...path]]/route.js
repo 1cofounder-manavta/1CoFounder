@@ -18,12 +18,22 @@ const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 
 async function getDb() {
   if (cachedDb) return cachedDb;
-  if (!cachedClient) {
-    cachedClient = new MongoClient(process.env.MONGO_URL);
-    await cachedClient.connect();
+  try {
+    if (!cachedClient) {
+      cachedClient = new MongoClient(process.env.MONGO_URL, {
+        connectTimeoutMS: 10000,
+        serverSelectionTimeoutMS: 10000,
+      });
+      await cachedClient.connect();
+    }
+    cachedDb = cachedClient.db(process.env.DB_NAME);
+    return cachedDb;
+  } catch (err) {
+    cachedClient = null;
+    cachedDb = null;
+    console.error('[MongoDB] Connection failed:', err.message);
+    throw err;
   }
-  cachedDb = cachedClient.db(process.env.DB_NAME);
-  return cachedDb;
 }
 
 function verifyAuth(request) {
@@ -118,13 +128,13 @@ function json(data, status = 200) {
 export async function GET(request, { params }) {
   const path = params.path || [];
   
+  // Health check - must NOT depend on DB connection
+  if (path[0] === 'health') {
+    return json({ status: 'ok', timestamp: new Date().toISOString() });
+  }
+
   try {
     const db = await getDb();
-
-    // GET /api/health
-    if (path[0] === 'health') {
-      return json({ status: 'ok', timestamp: new Date().toISOString() });
-    }
 
     // GET /api/auth/me
     if (path[0] === 'auth' && path[1] === 'me') {

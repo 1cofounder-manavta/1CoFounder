@@ -8,25 +8,23 @@ import {
   Briefcase, Filter, RefreshCw, Menu, X, Heart, MessageCircle
 } from 'lucide-react';
 
-const BASE = process.env.NEXT_PUBLIC_BASE_URL || '';
-
 const api = {
   get: async (path, token, params = {}) => {
-    const url = new URL(`${BASE}/api/${path}`);
+    const url = new URL(`/api/${path}`, window.location.origin);
     Object.entries(params).forEach(([k, v]) => { if (v) url.searchParams.set(k, v); });
     const res = await fetch(url.toString(), { headers: { Authorization: `Bearer ${token}` } });
     return res.json();
   },
   put: async (path, token) => {
-    const res = await fetch(`${BASE}/api/${path}`, { method: 'PUT', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } });
+    const res = await fetch(`/api/${path}`, { method: 'PUT', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } });
     return res.json();
   },
   del: async (path, token) => {
-    const res = await fetch(`${BASE}/api/${path}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    const res = await fetch(`/api/${path}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
     return res.json();
   },
   post: async (path, body, token) => {
-    const res = await fetch(`${BASE}/api/${path}`, { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const res = await fetch(`/api/${path}`, { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     return res.json();
   },
 };

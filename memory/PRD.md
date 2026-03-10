@@ -15,6 +15,7 @@ Build a nonprofit web platform for healthcare innovators to find co-founders. Fe
 - `/app/app/api/[[...path]]/route.js` - All backend API logic  
 - `/app/app/admin/page.js` - Admin panel (separate page)
 - `/app/.env` - Environment variables
+- `/app/next.config.js` - Next.js configuration (standalone output, MongoDB external package)
 
 ## What's Been Implemented
 
@@ -49,6 +50,12 @@ Build a nonprofit web platform for healthcare innovators to find co-founders. Fe
   - Notification dropdown already working in navbar
   - Admin dashboard already displaying all analytics
   - Cleaned up redundant standalone page files
+
+### Phase 6: Deployment Fixes ✅ (Fixed Mar 10, 2026)
+- Health check endpoint (`/api/health`) moved outside MongoDB connection dependency — prevents Kubernetes restart loops when DB is slow
+- MongoDB `getDb()` connection with error handling, retry on failure, and configurable timeouts (10s connect, 10s server selection)
+- Admin panel API calls switched from `NEXT_PUBLIC_BASE_URL` to relative paths (`/api/...`) — prevents failures when env var is missing in production
+- Production build verified: all routes compile successfully with `output: 'standalone'`
 
 ## Test Accounts
 - Regular: `priya@test.com` / `password123`
