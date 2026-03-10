@@ -5,7 +5,7 @@ import time
 from datetime import datetime
 
 # Base URL from environment
-BASE_URL = "https://medical-match-1.preview.emergentagent.com/api"
+BASE_URL = "https://cofounder-ready.preview.emergentagent.com/api"
 
 # Test credentials from review request
 CREDENTIALS = {

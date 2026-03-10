@@ -2,7 +2,7 @@ import requests
 import json
 
 # Test the specific problems endpoint functionality that was failing
-BASE_URL = "https://medical-match-1.preview.emergentagent.com/api"
+BASE_URL = "https://cofounder-ready.preview.emergentagent.com/api"
 
 def test_problems_endpoint():
     print("=== Testing Problems Endpoint After Fix ===\n")

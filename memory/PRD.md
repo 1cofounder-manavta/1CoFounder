@@ -3,7 +3,7 @@
 ## Overview
 A nonprofit web platform for healthcare innovators to find co-founders and collaborate. Built with Next.js 14, MongoDB, and Tailwind CSS. A Manavta Foundation Initiative.
 
-**App URL**: https://medical-match-1.preview.emergentagent.com
+**App URL**: https://cofounder-ready.preview.emergentagent.com
 
 ## Core Features (All Implemented ✅)
 1. **Email Authentication** — JWT-based signup/login with email verification via Resend
