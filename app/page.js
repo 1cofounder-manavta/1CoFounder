@@ -317,9 +317,9 @@ function Navbar({ currentView, setView, user, onLogout }) {
           </div>
 
           {/* Settings */}
-          <a href="/settings" data-testid="nav-settings" className="p-2 text-slate-400 hover:text-slate-700 transition-all rounded-xl hover:bg-slate-100">
+          <button onClick={() => setView('settings')} data-testid="nav-settings" className="p-2 text-slate-400 hover:text-slate-700 transition-all rounded-xl hover:bg-slate-100">
             <Settings className="h-4 w-4" />
-          </a>
+          </button>
 
           <button data-testid="nav-logout" onClick={onLogout} className="p-2 text-slate-400 hover:text-red-500 transition-all duration-200 rounded-xl hover:bg-red-50">
             <LogOut className="h-4 w-4" />
@@ -333,7 +333,7 @@ function Navbar({ currentView, setView, user, onLogout }) {
 // ==========================================
 // LANDING VIEW
 // ==========================================
-function LandingView({ onGetStarted }) {
+function LandingView({ onGetStarted, onViewPage }) {
   const features = [
     { icon: Search, title: 'Smart Matching', desc: 'AI-powered discovery to find your ideal healthcare co-founder based on complementary skills and shared interests.', color: 'from-teal-500 to-emerald-500' },
     { icon: Handshake, title: 'Verified Profiles', desc: 'Connect with real healthcare professionals — doctors, engineers, researchers, and investors.', color: 'from-blue-500 to-indigo-500' },
@@ -489,9 +489,9 @@ function LandingView({ onGetStarted }) {
             <p className="text-sm text-slate-400">Accelerating healthcare innovation through collaboration.</p>
           </div>
           <div className="flex flex-wrap justify-center gap-4 pt-4 border-t border-slate-100">
-            <a href="/terms" data-testid="footer-terms" className="text-xs text-slate-400 hover:text-teal-600 transition-colors">Terms of Service</a>
-            <a href="/privacy" data-testid="footer-privacy" className="text-xs text-slate-400 hover:text-teal-600 transition-colors">Privacy Policy</a>
-            <a href="/community-guidelines" data-testid="footer-guidelines" className="text-xs text-slate-400 hover:text-teal-600 transition-colors">Community Guidelines</a>
+            <button onClick={() => onViewPage('terms')} data-testid="footer-terms" className="text-xs text-slate-400 hover:text-teal-600 transition-colors">Terms of Service</button>
+            <button onClick={() => onViewPage('privacy')} data-testid="footer-privacy" className="text-xs text-slate-400 hover:text-teal-600 transition-colors">Privacy Policy</button>
+            <button onClick={() => onViewPage('community-guidelines')} data-testid="footer-guidelines" className="text-xs text-slate-400 hover:text-teal-600 transition-colors">Community Guidelines</button>
           </div>
         </div>
       </footer>
@@ -1350,8 +1350,8 @@ function DiscoverView({ user, token, onChat }) {
           {/* Action Buttons */}
           <div className="px-6 pb-6 pt-2">
             <div className="flex justify-end gap-1 mb-3">
-              <button data-testid="report-profile-btn" onClick={async () => { const reason = prompt('Report reason:'); if (reason) { await api.post('reports', { target_type: 'user', target_id: profiles[idx].id, reason }, token); alert('Report submitted. Thank you.'); } }} className="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors" title="Report"><Flag className="h-3.5 w-3.5" /></button>
-              <button data-testid="block-profile-btn" onClick={async () => { if (confirm(`Block ${profiles[idx].name}?`)) { await api.post('users/block', { blocked_id: profiles[idx].id }, token); handleSwipe('pass'); } }} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Block"><Ban className="h-3.5 w-3.5" /></button>
+              <button data-testid="report-profile-btn" onClick={async () => { const reason = prompt('Report reason:'); if (reason) { await api.post('reports', { target_type: 'user', target_id: profiles[currentIndex].id, reason }, token); alert('Report submitted. Thank you.'); } }} className="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors" title="Report"><Flag className="h-3.5 w-3.5" /></button>
+              <button data-testid="block-profile-btn" onClick={async () => { if (confirm(`Block ${profiles[currentIndex].name}?`)) { await api.post('users/block', { blocked_id: profiles[currentIndex].id }, token); handleSwipe('pass'); } }} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Block"><Ban className="h-3.5 w-3.5" /></button>
             </div>
             <Separator className="mb-5" />
             <div className="grid grid-cols-2 gap-3">
@@ -1932,6 +1932,282 @@ function ProjectsView({ user, token }) {
 }
 
 // ==========================================
+// SETTINGS VIEW (Inline)
+// ==========================================
+function SettingsView({ user, token, onUpdate, onBack }) {
+  const [tab, setTab] = useState('account');
+  const [toast, setToast] = useState(null);
+  const [name, setName] = useState(user?.name || '');
+  const [bio, setBio] = useState(user?.bio || '');
+  const [saving, setSaving] = useState(false);
+  const [currentPw, setCurrentPw] = useState('');
+  const [newPw, setNewPw] = useState('');
+  const [confirmPw, setConfirmPw] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [pwSaving, setPwSaving] = useState(false);
+  const [notifPrefs, setNotifPrefs] = useState(user?.notification_preferences || { matches: true, messages: true, problems: true, projects: true });
+  const [blockedUsers, setBlockedUsers] = useState([]);
+
+  const loadBlocked = useCallback(async () => {
+    const res = await api.get('users/blocked', token);
+    setBlockedUsers(res.blocked_users || []);
+  }, [token]);
+
+  useEffect(() => { if (tab === 'privacy') loadBlocked(); }, [tab, loadBlocked]);
+
+  const saveProfile = async () => {
+    setSaving(true);
+    const res = await api.put('users/profile', { name, bio }, token);
+    if (res.user) { onUpdate(res.user); setToast({ message: 'Profile updated', type: 'success' }); }
+    else setToast({ message: res.error || 'Failed to save', type: 'error' });
+    setSaving(false);
+  };
+
+  const changePassword = async () => {
+    if (newPw !== confirmPw) { setToast({ message: 'Passwords do not match', type: 'error' }); return; }
+    if (newPw.length < 6) { setToast({ message: 'Password must be at least 6 characters', type: 'error' }); return; }
+    setPwSaving(true);
+    const res = await api.put('users/password', { current_password: currentPw, new_password: newPw }, token);
+    if (res.success) { setToast({ message: 'Password updated', type: 'success' }); setCurrentPw(''); setNewPw(''); setConfirmPw(''); }
+    else setToast({ message: res.error || 'Failed to update', type: 'error' });
+    setPwSaving(false);
+  };
+
+  const saveNotifPrefs = async () => {
+    const res = await api.put('users/notification-preferences', notifPrefs, token);
+    if (res.success) setToast({ message: 'Notification preferences saved', type: 'success' });
+    else setToast({ message: 'Failed to save preferences', type: 'error' });
+  };
+
+  const unblock = async (id) => {
+    await api.post('users/unblock', { blocked_id: id }, token);
+    loadBlocked();
+    setToast({ message: 'User unblocked', type: 'success' });
+  };
+
+  const resendVerification = async () => {
+    const res = await api.post('auth/resend-verification', {}, token);
+    if (res.success) setToast({ message: 'Verification email sent!', type: 'success' });
+    else setToast({ message: res.error || 'Failed', type: 'error' });
+  };
+
+  const completeness = user?.profile_completeness || 0;
+
+  const tabs = [
+    { id: 'account', label: 'Account', icon: User },
+    { id: 'security', label: 'Password', icon: Shield },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'privacy', label: 'Privacy', icon: Ban },
+  ];
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8" data-testid="settings-page">
+      {toast && (
+        <div className={`fixed top-20 right-4 z-50 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium flex items-center gap-2 animate-fade-in-up ${toast.type === 'success' ? 'bg-teal-50 border-teal-200 text-teal-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
+          {toast.type === 'success' ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
+          {toast.message}
+          <button onClick={() => setToast(null)} className="ml-2 opacity-60 hover:opacity-100"><X className="h-3 w-3" /></button>
+        </div>
+      )}
+
+      <div className="flex items-center gap-3 mb-6">
+        <button data-testid="settings-back" onClick={onBack} className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <h1 className="text-2xl font-extrabold text-slate-900">Settings</h1>
+      </div>
+
+      <div className="flex flex-col md:flex-row gap-6">
+        <div className="md:w-48 flex md:flex-col gap-1">
+          {tabs.map(t => {
+            const Icon = t.icon;
+            return (
+              <button key={t.id} data-testid={`settings-tab-${t.id}`} onClick={() => setTab(t.id)} className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all w-full text-left ${tab === t.id ? 'bg-teal-700 text-white' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'}`}>
+                <Icon className="h-4 w-4" />{t.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex-1">
+          {tab === 'account' && (
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-5" data-testid="settings-account">
+              <div><h2 className="text-lg font-bold text-slate-900">Account</h2><p className="text-sm text-slate-500">Update your personal information</p></div>
+              {!user?.email_verified && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between" data-testid="email-verification-banner">
+                  <div><p className="text-sm font-medium text-amber-800">Email not verified</p><p className="text-xs text-amber-600">Check your inbox or request a new link</p></div>
+                  <button onClick={resendVerification} className="text-xs font-semibold text-amber-700 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg transition-colors">Resend</button>
+                </div>
+              )}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-slate-700">Email</label>
+                <input disabled value={user?.email || ''} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-400" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-slate-700">Name</label>
+                <input data-testid="settings-name" value={name} onChange={e => setName(e.target.value)} className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-slate-700">Bio</label>
+                <textarea data-testid="settings-bio" value={bio} onChange={e => setBio(e.target.value)} rows={3} className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-700 resize-none focus:outline-none focus:ring-2 focus:ring-teal-500" />
+              </div>
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4" data-testid="profile-completeness">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-slate-700">Profile Completeness</span>
+                  <span className="text-sm font-bold text-teal-700">{completeness}%</span>
+                </div>
+                <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                  <div className="h-2 rounded-full transition-all duration-500 btn-gradient" style={{ width: `${completeness}%` }} />
+                </div>
+                {completeness < 100 && <p className="text-xs text-slate-500 mt-2">Complete your profile to rank higher in co-founder discovery.</p>}
+              </div>
+              <button data-testid="settings-save-profile" onClick={saveProfile} disabled={saving} className="btn-gradient text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors disabled:opacity-50">
+                {saving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          )}
+
+          {tab === 'security' && (
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-5" data-testid="settings-security">
+              <div><h2 className="text-lg font-bold text-slate-900">Change Password</h2><p className="text-sm text-slate-500">Update your account password</p></div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-slate-700">Current Password</label>
+                <div className="relative">
+                  <input data-testid="settings-current-pw" type={showPw ? 'text' : 'password'} value={currentPw} onChange={e => setCurrentPw(e.target.value)} className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                  <button onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">{showPw ? <Eye className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-slate-700">New Password</label>
+                <input data-testid="settings-new-pw" type="password" value={newPw} onChange={e => setNewPw(e.target.value)} className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="Min 6 characters" />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-slate-700">Confirm New Password</label>
+                <input data-testid="settings-confirm-pw" type="password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)} className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
+              </div>
+              <button data-testid="settings-change-pw" onClick={changePassword} disabled={pwSaving || !currentPw || !newPw} className="btn-gradient text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors disabled:opacity-50">
+                {pwSaving ? 'Updating...' : 'Change Password'}
+              </button>
+            </div>
+          )}
+
+          {tab === 'notifications' && (
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-5" data-testid="settings-notifications">
+              <div><h2 className="text-lg font-bold text-slate-900">Notifications</h2><p className="text-sm text-slate-500">Choose which email notifications you receive</p></div>
+              {[
+                { key: 'matches', label: 'Match Notifications', desc: 'When someone matches with you' },
+                { key: 'messages', label: 'Message Notifications', desc: 'When you receive a new message' },
+                { key: 'problems', label: 'Problem Updates', desc: 'When someone joins your problem' },
+                { key: 'projects', label: 'Project Updates', desc: 'When there are project updates' },
+              ].map(item => (
+                <div key={item.key} className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors" data-testid={`notif-toggle-${item.key}`}>
+                  <div><p className="text-sm font-medium text-slate-700">{item.label}</p><p className="text-xs text-slate-400">{item.desc}</p></div>
+                  <button
+                    onClick={() => setNotifPrefs(p => ({ ...p, [item.key]: !p[item.key] }))}
+                    className={`relative w-11 h-6 rounded-full transition-colors ${notifPrefs[item.key] ? 'bg-teal-600' : 'bg-slate-300'}`}
+                  >
+                    <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${notifPrefs[item.key] ? 'translate-x-5' : ''}`} />
+                  </button>
+                </div>
+              ))}
+              <button data-testid="settings-save-notif" onClick={saveNotifPrefs} className="btn-gradient text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-colors">Save Preferences</button>
+            </div>
+          )}
+
+          {tab === 'privacy' && (
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-5" data-testid="settings-privacy">
+              <div><h2 className="text-lg font-bold text-slate-900">Privacy & Blocked Users</h2><p className="text-sm text-slate-500">Manage your blocked users</p></div>
+              {blockedUsers.length === 0 ? (
+                <p className="text-sm text-slate-400 py-4">You haven&apos;t blocked anyone.</p>
+              ) : (
+                <div className="space-y-2">
+                  {blockedUsers.map(u => (
+                    <div key={u.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                      <div><p className="text-sm font-medium text-slate-700">{u.name}</p><p className="text-xs text-slate-400">{u.role}</p></div>
+                      <button onClick={() => unblock(u.id)} className="text-xs font-semibold text-red-500 hover:text-red-700 transition-colors">Unblock</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// LEGAL PAGE VIEW (Terms, Privacy, Guidelines)
+// ==========================================
+function LegalPageView({ type, onBack }) {
+  const pages = {
+    terms: {
+      title: 'Terms of Service',
+      sections: [
+        { heading: '1. Acceptance of Terms', text: 'By accessing or using 1CoFounder.com ("the Platform"), a Manavta Foundation initiative, you agree to be bound by these Terms of Service. If you do not agree, please do not use the Platform.' },
+        { heading: '2. Description of Service', text: '1CoFounder is a nonprofit platform that connects healthcare innovators — clinicians, engineers, researchers, and business operators — to find co-founders and collaborate on healthcare solutions.' },
+        { heading: '3. User Accounts', text: 'You must provide accurate information when creating an account. You are responsible for maintaining the confidentiality of your credentials. You must be at least 18 years old to use the Platform.' },
+        { heading: '4. Acceptable Use', text: 'You agree not to: use the Platform for spam, harassment, or fraudulent purposes; impersonate others; share harmful or misleading content; attempt to gain unauthorized access to the Platform or other users\' accounts.' },
+        { heading: '5. Content Ownership', text: 'You retain ownership of the content you post. By posting content, you grant 1CoFounder a non-exclusive, royalty-free license to display and distribute your content within the Platform.' },
+        { heading: '6. Termination', text: 'We reserve the right to suspend or terminate your account for violations of these Terms. You may delete your account at any time.' },
+        { heading: '7. Disclaimer', text: 'The Platform is provided "as is" without warranties of any kind. We do not guarantee the accuracy of user profiles or the success of any collaboration formed through the Platform.' },
+        { heading: '8. Contact', text: 'For questions about these Terms, please contact us through the Platform.' },
+      ]
+    },
+    privacy: {
+      title: 'Privacy Policy',
+      sections: [
+        { heading: '1. Information We Collect', text: 'We collect information you provide when creating your account: name, email, professional role, location, skills, interests, and bio. We also collect usage data such as swipe actions and messages to provide our matching service.' },
+        { heading: '2. How We Use Your Information', text: 'We use your information to: provide and improve our matching service; display your profile to potential co-founders; send notifications about matches, messages, and platform updates; maintain platform safety and prevent abuse.' },
+        { heading: '3. Information Sharing', text: 'We do not sell your personal information. Your profile information is visible to other authenticated users. We may share anonymized, aggregated data for research purposes in healthcare innovation.' },
+        { heading: '4. Data Security', text: 'We implement industry-standard security measures including encrypted passwords and secure data transmission. However, no method of electronic storage is 100% secure.' },
+        { heading: '5. Your Rights', text: 'You have the right to: access and update your personal information; delete your account and associated data; opt out of email notifications; request a copy of your data.' },
+        { heading: '6. Cookies & Analytics', text: 'We use essential cookies to maintain your session. We may use analytics to understand platform usage and improve our service.' },
+        { heading: '7. Changes to This Policy', text: 'We may update this Privacy Policy from time to time. We will notify you of significant changes via email or platform notification.' },
+        { heading: '8. Contact', text: 'For privacy-related questions, please contact us through the Platform. 1CoFounder.com is a Manavta Foundation initiative.' },
+      ]
+    },
+    'community-guidelines': {
+      title: 'Community Guidelines',
+      sections: [
+        { heading: 'Our Mission', text: '1CoFounder exists to connect healthcare innovators and accelerate solutions that improve patient outcomes. These guidelines ensure our community remains safe, respectful, and productive.' },
+        { heading: 'Be Authentic', text: 'Use your real name and credentials. Accurately represent your skills, experience, and intentions. Misrepresentation undermines trust and may result in account suspension.' },
+        { heading: 'Be Respectful', text: 'Treat every member with dignity and respect, regardless of their background, role, or experience level. Harassment, discrimination, and personal attacks are not tolerated.' },
+        { heading: 'Collaborate in Good Faith', text: 'When you express interest in a co-founder or join a project, follow through with genuine intent. Do not use the platform solely for recruiting, sales, or self-promotion.' },
+        { heading: 'Protect Privacy', text: 'Do not share other users\' personal information, messages, or profile details outside the Platform without their explicit consent.' },
+        { heading: 'Report Concerns', text: 'If you encounter behavior that violates these guidelines, please use the Report feature. Reports are reviewed by our team and handled confidentially.' },
+        { heading: 'Consequences', text: 'Violations of these guidelines may result in: content removal, temporary suspension, or permanent account termination. Repeated reports from multiple users will trigger automatic review.' },
+        { heading: 'Contact Us', text: 'If you have questions about these guidelines, please reach out. We are committed to maintaining a community that fosters meaningful healthcare innovation.' },
+      ]
+    }
+  };
+
+  const page = pages[type];
+  if (!page) return null;
+
+  return (
+    <div className="min-h-screen bg-slate-50" data-testid={`${type}-page`}>
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-12">
+        <button onClick={onBack} data-testid="legal-back-btn" className="text-sm text-teal-700 hover:underline mb-6 inline-flex items-center gap-1">
+          <ArrowLeft className="h-3.5 w-3.5" /> Back to 1CoFounder
+        </button>
+        <h1 className="text-3xl font-bold text-slate-900 mb-2">{page.title}</h1>
+        <p className="text-sm text-slate-500 mb-8">Last updated: March 2026</p>
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 space-y-6 text-sm text-slate-600 leading-relaxed">
+          {page.sections.map((s, i) => (
+            <section key={i}>
+              <h2 className="text-lg font-bold text-slate-800 mb-2">{s.heading}</h2>
+              <p>{s.text}</p>
+            </section>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
 // MAIN APP
 // ==========================================
 export default function App() {
@@ -1983,20 +2259,25 @@ export default function App() {
     setCurrentView('matches');
   };
 
+  const legalPages = ['terms', 'privacy', 'community-guidelines'];
+  const isLegalPage = legalPages.includes(currentView);
+
   if (loading) return <LoadingScreen />;
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {user && !['landing', 'auth'].includes(currentView) && (
+      {user && !['landing', 'auth', ...legalPages].includes(currentView) && (
         <Navbar currentView={currentView} setView={setCurrentView} user={user} onLogout={handleLogout} />
       )}
-      {currentView === 'landing' && <LandingView onGetStarted={() => setCurrentView('auth')} />}
+      {currentView === 'landing' && <LandingView onGetStarted={() => setCurrentView('auth')} onViewPage={setCurrentView} />}
       {currentView === 'auth' && <AuthView onAuth={handleAuth} />}
       {currentView === 'profile' && <ProfileView user={user} token={token} onUpdate={handleProfileUpdate} />}
       {currentView === 'discover' && <DiscoverView user={user} token={token} onChat={openChat} />}
       {currentView === 'matches' && <MessagingView user={user} token={token} />}
       {currentView === 'problems' && <ProblemsView user={user} token={token} />}
       {currentView === 'projects' && <ProjectsView user={user} token={token} />}
+      {currentView === 'settings' && <SettingsView user={user} token={token} onUpdate={handleProfileUpdate} onBack={() => setCurrentView('discover')} />}
+      {isLegalPage && <LegalPageView type={currentView} onBack={() => setCurrentView(user ? 'discover' : 'landing')} />}
     </div>
   );
 }
