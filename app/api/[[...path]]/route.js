@@ -3,11 +3,18 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
+import { Resend } from 'resend';
+import crypto from 'crypto';
 
 let cachedClient = null;
 let cachedDb = null;
 
-const JWT_SECRET = process.env.JWT_SECRET || '1cofounder-healthcare-secret-2025';
+const JWT_SECRET = process.env.JWT_SECRET;
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+const SENDER_EMAIL = process.env.SENDER_EMAIL || 'onboarding@resend.dev';
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+
+const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 
 async function getDb() {
   if (cachedDb) return cachedDb;
@@ -50,6 +57,60 @@ async function logAdminAction(db, adminId, action, targetType, targetId, details
   });
 }
 
+// ==========================================
+// EMAIL HELPER
+// ==========================================
+async function sendEmail(to, subject, html) {
+  if (!resend) { console.log(`[EMAIL SKIP] No Resend key. To: ${to}, Subject: ${subject}`); return; }
+  try {
+    await resend.emails.send({ from: SENDER_EMAIL, to: [to], subject, html });
+  } catch (e) { console.error(`[EMAIL ERROR] ${e.message}`); }
+}
+
+function emailTemplate(title, body) {
+  return `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;background:#f8fafc;"><div style="background:white;border-radius:16px;padding:32px;border:1px solid #e2e8f0;"><div style="text-align:center;margin-bottom:24px;"><span style="font-size:20px;font-weight:700;color:#0f766e;">1CoFounder</span><p style="color:#94a3b8;font-size:12px;margin:4px 0 0;">A Manavta Foundation Initiative</p></div><h2 style="font-size:18px;color:#1e293b;margin-bottom:12px;">${title}</h2><div style="color:#475569;font-size:14px;line-height:1.7;">${body}</div><hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;"/><p style="color:#94a3b8;font-size:11px;text-align:center;">1CoFounder.com — Find your healthcare co-founder</p></div></div>`;
+}
+
+// ==========================================
+// NOTIFICATION HELPER
+// ==========================================
+async function createNotification(db, userId, type, title, message, relatedId) {
+  await db.collection('notifications').insertOne({
+    id: uuidv4(), user_id: userId, type, title, message,
+    related_id: relatedId || null, read: false, created_at: new Date().toISOString()
+  });
+}
+
+// ==========================================
+// PROFILE COMPLETENESS
+// ==========================================
+function calcProfileCompleteness(user) {
+  const fields = ['bio', 'skills', 'interests', 'city', 'country', 'startup_stage', 'looking_for', 'role', 'commitment_level'];
+  let filled = 0;
+  for (const f of fields) {
+    const v = user?.[f];
+    if (Array.isArray(v) ? v.length > 0 : !!v) filled++;
+  }
+  return Math.round((filled / fields.length) * 100);
+}
+
+// ==========================================
+// RATE LIMITING
+// ==========================================
+async function checkRateLimit(db, userId, action, limit) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const count = await db.collection('rate_limits').countDocuments({
+    user_id: userId, action, created_at: { $gte: today.toISOString() }
+  });
+  return count < limit;
+}
+
+async function recordAction(db, userId, action) {
+  await db.collection('rate_limits').insertOne({
+    user_id: userId, action, created_at: new Date().toISOString()
+  });
+}
+
 function json(data, status = 200) {
   return NextResponse.json(data, { status });
 }
@@ -71,8 +132,55 @@ export async function GET(request, { params }) {
       if (!authUser) return json({ error: 'Unauthorized' }, 401);
       const user = await db.collection('users').findOne({ id: authUser.id });
       if (!user) return json({ error: 'User not found' }, 404);
-      const { password_hash, _id, ...safeUser } = user;
+      const { password_hash, _id, verification_token, ...safeUser } = user;
+      safeUser.profile_completeness = calcProfileCompleteness(user);
+      const unreadCount = await db.collection('notifications').countDocuments({ user_id: authUser.id, read: false });
+      safeUser.unread_notifications = unreadCount;
       return json({ user: safeUser });
+    }
+
+    // GET /api/auth/verify?token=...
+    if (path[0] === 'auth' && path[1] === 'verify') {
+      const url = new URL(request.url);
+      const token = url.searchParams.get('token');
+      if (!token) return json({ error: 'Verification token required' }, 400);
+
+      const user = await db.collection('users').findOne({ verification_token: token });
+      if (!user) return json({ error: 'Invalid or expired token' }, 400);
+      if (new Date(user.verification_expires) < new Date()) return json({ error: 'Token has expired. Please request a new one.' }, 400);
+
+      await db.collection('users').updateOne({ id: user.id }, { $set: { email_verified: true }, $unset: { verification_token: '', verification_expires: '' } });
+      // Redirect to app with success message
+      return NextResponse.redirect(`${BASE_URL}?verified=true`);
+    }
+
+    // GET /api/notifications
+    if (path[0] === 'notifications') {
+      const authUser = verifyAuth(request);
+      if (!authUser) return json({ error: 'Unauthorized' }, 401);
+
+      const url = new URL(request.url);
+      const limit = parseInt(url.searchParams.get('limit') || '30');
+      const notifications = await db.collection('notifications')
+        .find({ user_id: authUser.id })
+        .project({ _id: 0 })
+        .sort({ created_at: -1 })
+        .limit(limit)
+        .toArray();
+      const unread = await db.collection('notifications').countDocuments({ user_id: authUser.id, read: false });
+      return json({ notifications, unread });
+    }
+
+    // GET /api/users/blocked
+    if (path[0] === 'users' && path[1] === 'blocked') {
+      const authUser = verifyAuth(request);
+      if (!authUser) return json({ error: 'Unauthorized' }, 401);
+      const blocks = await db.collection('blocks').find({ blocker_id: authUser.id }).project({ _id: 0 }).toArray();
+      const blockedIds = blocks.map(b => b.blocked_id);
+      const users = blockedIds.length > 0
+        ? await db.collection('users').find({ id: { $in: blockedIds } }).project({ _id: 0, password_hash: 0 }).toArray()
+        : [];
+      return json({ blocked_users: users.map(u => ({ id: u.id, name: u.name, role: u.role })) });
     }
 
     // GET /api/users/discover
@@ -85,11 +193,15 @@ export async function GET(request, { params }) {
       if (!currentUser) return json({ error: 'User not found' }, 404);
 
       const swipes = await db.collection('swipes').find({ swiper_id: authUser.id }).toArray();
-      const excludeIds = [...swipes.map(s => s.target_id), authUser.id];
+      const blocks = await db.collection('blocks').find({
+        $or: [{ blocker_id: authUser.id }, { blocked_id: authUser.id }]
+      }).toArray();
+      const blockedIds = blocks.map(b => b.blocker_id === authUser.id ? b.blocked_id : b.blocker_id);
+      const excludeIds = [...swipes.map(s => s.target_id), ...blockedIds, authUser.id];
 
-      // Fetch all eligible users (no random sampling - we'll sort by score)
+      // Fetch all eligible users (not suspended, not blocked)
       const candidates = await db.collection('users')
-        .find({ id: { $nin: excludeIds }, profile_complete: true })
+        .find({ id: { $nin: excludeIds }, profile_complete: true, is_suspended: { $ne: true } })
         .project({ password_hash: 0, _id: 0 })
         .limit(100)
         .toArray();
@@ -147,7 +259,7 @@ export async function GET(request, { params }) {
           score += 2;
         }
 
-        return { ...candidate, _matchScore: score };
+        return { ...candidate, _matchScore: score + (calcProfileCompleteness(candidate) / 50) };
       });
 
       // Sort by score descending, then by created_at for tie-breaking
@@ -365,8 +477,14 @@ export async function GET(request, { params }) {
       const flaggedProblems = await db.collection('problems').countDocuments({ report_count: { $gte: 3 } });
       const flaggedContent = flaggedUsers + flaggedProblems;
 
+      const [totalMatches, totalMessages, activeProjects] = await Promise.all([
+        db.collection('matches').countDocuments(),
+        db.collection('messages').countDocuments(),
+        db.collection('projects').countDocuments({ stage: { $in: ['Active', 'In Progress', 'MVP'] } }),
+      ]);
+
       return json({
-        stats: { totalUsers, newUsersToday, totalProblems, totalProjects, pendingVerifications, flaggedContent, totalReports },
+        stats: { totalUsers, newUsersToday, totalProblems, totalProjects, pendingVerifications, flaggedContent, totalReports, totalMatches, totalMessages, activeProjects },
       });
     }
 
@@ -575,6 +693,8 @@ export async function POST(request, { params }) {
 
       const hashedPassword = await bcrypt.hash(password, 10);
       const userId = uuidv4();
+      const verificationToken = crypto.randomBytes(32).toString('hex');
+      const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
       const user = {
         id: userId,
@@ -594,12 +714,24 @@ export async function POST(request, { params }) {
         looking_for: [],
         verified_status: false,
         profile_complete: false,
+        is_admin: false,
+        is_suspended: false,
+        report_count: 0,
+        email_verified: false,
+        verification_token: verificationToken,
+        verification_expires: verificationExpires,
+        notification_preferences: { matches: true, messages: true, problems: true, projects: true },
         created_at: new Date().toISOString()
       };
 
       await db.collection('users').insertOne(user);
       const token = jwt.sign({ id: userId, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
       const { password_hash, _id, ...safeUser } = user;
+
+      // Send verification email
+      const verifyUrl = `${BASE_URL}/api/auth/verify?token=${verificationToken}`;
+      sendEmail(user.email, 'Verify your 1CoFounder account', emailTemplate('Welcome to 1CoFounder!', `<p>Hi ${name},</p><p>Thanks for joining 1CoFounder! Please verify your email address to get started.</p><a href="${verifyUrl}" style="display:inline-block;background:#0f766e;color:white;font-weight:600;padding:12px 28px;border-radius:12px;text-decoration:none;margin:16px 0;">Verify Email</a><p style="font-size:12px;color:#94a3b8;">This link expires in 24 hours.</p>`));
+
       return json({ token, user: safeUser }, 201);
     }
 
@@ -624,6 +756,10 @@ export async function POST(request, { params }) {
       const authUser = verifyAuth(request);
       if (!authUser) return json({ error: 'Unauthorized' }, 401);
 
+      // Rate limit: 30 swipes per day
+      const canSwipe = await checkRateLimit(db, authUser.id, 'swipe', 30);
+      if (!canSwipe) return json({ error: 'Daily swipe limit reached (30/day). Try again tomorrow!' }, 429);
+
       const { target_id, action } = await request.json();
       if (!target_id || !action) return json({ error: 'target_id and action are required' }, 400);
 
@@ -638,6 +774,7 @@ export async function POST(request, { params }) {
         created_at: new Date().toISOString()
       };
       await db.collection('swipes').insertOne(swipe);
+      await recordAction(db, authUser.id, 'swipe');
 
       let isMatch = false;
       let matchData = null;
@@ -668,8 +805,21 @@ export async function POST(request, { params }) {
             await db.collection('matches').insertOne(match);
 
             const matchedUser = await db.collection('users').findOne({ id: target_id });
+            const currentUser = await db.collection('users').findOne({ id: authUser.id });
             const { password_hash, _id, ...safeMatchedUser } = matchedUser;
             matchData = { match: { id: match.id }, matched_user: safeMatchedUser };
+
+            // Notifications for both users
+            createNotification(db, authUser.id, 'match', 'New Match!', `You matched with ${matchedUser.name}!`, target_id);
+            createNotification(db, target_id, 'match', 'New Match!', `You matched with ${currentUser.name}!`, authUser.id);
+
+            // Email notifications
+            if (matchedUser.notification_preferences?.matches !== false) {
+              sendEmail(matchedUser.email, 'You have a new match on 1CoFounder!', emailTemplate('New Match!', `<p>Great news! You matched with <strong>${currentUser.name}</strong> (${currentUser.role}).</p><p>Start a conversation and explore how you can collaborate on healthcare innovation.</p><a href="${BASE_URL}" style="display:inline-block;background:#0f766e;color:white;font-weight:600;padding:12px 28px;border-radius:12px;text-decoration:none;margin:16px 0;">Start Chatting</a>`));
+            }
+            if (currentUser.notification_preferences?.matches !== false) {
+              sendEmail(currentUser.email, 'You have a new match on 1CoFounder!', emailTemplate('New Match!', `<p>Great news! You matched with <strong>${matchedUser.name}</strong> (${matchedUser.role}).</p><a href="${BASE_URL}" style="display:inline-block;background:#0f766e;color:white;font-weight:600;padding:12px 28px;border-radius:12px;text-decoration:none;margin:16px 0;">Start Chatting</a>`));
+            }
           }
         }
       }
@@ -678,6 +828,7 @@ export async function POST(request, { params }) {
     }
 
     // POST /api/messages
+    // POST /api/messages
     if (path[0] === 'messages') {
       const authUser = verifyAuth(request);
       if (!authUser) return json({ error: 'Unauthorized' }, 401);
@@ -685,7 +836,6 @@ export async function POST(request, { params }) {
       const { conversation_id, message } = await request.json();
       if (!conversation_id || !message) return json({ error: 'conversation_id and message are required' }, 400);
 
-      // Verify match exists (only matched users can message)
       const match = await db.collection('matches').findOne({
         id: conversation_id,
         $or: [{ user1_id: authUser.id }, { user2_id: authUser.id }]
@@ -702,6 +852,25 @@ export async function POST(request, { params }) {
       };
       await db.collection('messages').insertOne(msg);
       const { _id, ...cleanMsg } = msg;
+
+      // Notify the other user
+      const recipientId = match.user1_id === authUser.id ? match.user2_id : match.user1_id;
+      const sender = await db.collection('users').findOne({ id: authUser.id });
+      createNotification(db, recipientId, 'message', 'New Message', `${sender?.name || 'Someone'} sent you a message`, conversation_id);
+
+      // Email notification (throttled — only if last message from sender > 5 min ago)
+      const recentMsg = await db.collection('messages').findOne(
+        { conversation_id, sender_id: authUser.id, id: { $ne: msg.id } },
+        { sort: { created_at: -1 } }
+      );
+      const shouldEmail = !recentMsg || (new Date() - new Date(recentMsg.created_at)) > 5 * 60 * 1000;
+      if (shouldEmail) {
+        const recipient = await db.collection('users').findOne({ id: recipientId });
+        if (recipient?.notification_preferences?.messages !== false) {
+          sendEmail(recipient.email, `New message from ${sender?.name} on 1CoFounder`, emailTemplate('New Message', `<p><strong>${sender?.name}</strong> sent you a message:</p><p style="background:#f1f5f9;padding:12px 16px;border-radius:12px;border-left:3px solid #0f766e;">"${message.slice(0, 200)}${message.length > 200 ? '...' : ''}"</p><a href="${BASE_URL}" style="display:inline-block;background:#0f766e;color:white;font-weight:600;padding:12px 28px;border-radius:12px;text-decoration:none;margin:16px 0;">Reply Now</a>`));
+        }
+      }
+
       return json({ message: cleanMsg }, 201);
     }
 
@@ -789,6 +958,10 @@ export async function POST(request, { params }) {
       const authUser = verifyAuth(request);
       if (!authUser) return json({ error: 'Unauthorized' }, 401);
 
+      // Rate limit: 3 problem posts per day
+      const canPost = await checkRateLimit(db, authUser.id, 'problem_post', 3);
+      if (!canPost) return json({ error: 'Daily post limit reached (3/day). Try again tomorrow!' }, 429);
+
       const { title, description, clinical_context, skills_required } = await request.json();
       if (!title || !description) return json({ error: 'Title and description are required' }, 400);
 
@@ -799,9 +972,12 @@ export async function POST(request, { params }) {
         description,
         clinical_context: clinical_context || '',
         skills_required: skills_required || [],
+        report_count: 0,
+        is_hidden: false,
         created_at: new Date().toISOString()
       };
       await db.collection('problems').insertOne(problem);
+      await recordAction(db, authUser.id, 'problem_post');
       const { _id, ...cleanProblem } = problem;
       return json({ problem: cleanProblem }, 201);
     }
@@ -906,6 +1082,54 @@ export async function POST(request, { params }) {
       return json({ success: true });
     }
 
+    // POST /api/notifications/read
+    if (path[0] === 'notifications' && path[1] === 'read') {
+      const authUser = verifyAuth(request);
+      if (!authUser) return json({ error: 'Unauthorized' }, 401);
+      const body = await request.json();
+      if (body.id) {
+        await db.collection('notifications').updateOne({ id: body.id, user_id: authUser.id }, { $set: { read: true } });
+      } else {
+        await db.collection('notifications').updateMany({ user_id: authUser.id, read: false }, { $set: { read: true } });
+      }
+      return json({ success: true });
+    }
+
+    // POST /api/users/block
+    if (path[0] === 'users' && path[1] === 'block') {
+      const authUser = verifyAuth(request);
+      if (!authUser) return json({ error: 'Unauthorized' }, 401);
+      const { blocked_id } = await request.json();
+      if (!blocked_id) return json({ error: 'blocked_id required' }, 400);
+      const existing = await db.collection('blocks').findOne({ blocker_id: authUser.id, blocked_id });
+      if (existing) return json({ error: 'Already blocked' }, 409);
+      await db.collection('blocks').insertOne({ id: uuidv4(), blocker_id: authUser.id, blocked_id, created_at: new Date().toISOString() });
+      return json({ success: true });
+    }
+
+    // POST /api/users/unblock
+    if (path[0] === 'users' && path[1] === 'unblock') {
+      const authUser = verifyAuth(request);
+      if (!authUser) return json({ error: 'Unauthorized' }, 401);
+      const { blocked_id } = await request.json();
+      await db.collection('blocks').deleteOne({ blocker_id: authUser.id, blocked_id });
+      return json({ success: true });
+    }
+
+    // POST /api/auth/resend-verification
+    if (path[0] === 'auth' && path[1] === 'resend-verification') {
+      const authUser = verifyAuth(request);
+      if (!authUser) return json({ error: 'Unauthorized' }, 401);
+      const user = await db.collection('users').findOne({ id: authUser.id });
+      if (user?.email_verified) return json({ error: 'Already verified' }, 400);
+      const newToken = crypto.randomBytes(32).toString('hex');
+      const newExpires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      await db.collection('users').updateOne({ id: authUser.id }, { $set: { verification_token: newToken, verification_expires: newExpires } });
+      const verifyUrl = `${BASE_URL}/api/auth/verify?token=${newToken}`;
+      sendEmail(user.email, 'Verify your 1CoFounder account', emailTemplate('Verify Your Email', `<p>Hi ${user.name},</p><p>Click below to verify your email address.</p><a href="${verifyUrl}" style="display:inline-block;background:#0f766e;color:white;font-weight:600;padding:12px 28px;border-radius:12px;text-decoration:none;margin:16px 0;">Verify Email</a><p style="font-size:12px;color:#94a3b8;">This link expires in 24 hours.</p>`));
+      return json({ success: true });
+    }
+
     return json({ error: 'Not found' }, 404);
   } catch (error) {
     console.error('POST error:', error);
@@ -935,8 +1159,33 @@ export async function PUT(request, { params }) {
 
       await db.collection('users').updateOne({ id: authUser.id }, { $set: updateFields });
       const updatedUser = await db.collection('users').findOne({ id: authUser.id });
-      const { password_hash, _id, ...safeUser } = updatedUser;
+      const { password_hash, _id, verification_token, ...safeUser } = updatedUser;
+      safeUser.profile_completeness = calcProfileCompleteness(updatedUser);
       return json({ user: safeUser });
+    }
+
+    // PUT /api/users/password
+    if (path[0] === 'users' && path[1] === 'password') {
+      const authUser = verifyAuth(request);
+      if (!authUser) return json({ error: 'Unauthorized' }, 401);
+      const { current_password, new_password } = await request.json();
+      if (!current_password || !new_password) return json({ error: 'Both passwords required' }, 400);
+      if (new_password.length < 6) return json({ error: 'New password must be at least 6 characters' }, 400);
+      const user = await db.collection('users').findOne({ id: authUser.id });
+      const valid = await bcrypt.compare(current_password, user.password_hash);
+      if (!valid) return json({ error: 'Current password is incorrect' }, 400);
+      const hashed = await bcrypt.hash(new_password, 10);
+      await db.collection('users').updateOne({ id: authUser.id }, { $set: { password_hash: hashed } });
+      return json({ success: true });
+    }
+
+    // PUT /api/users/notification-preferences
+    if (path[0] === 'users' && path[1] === 'notification-preferences') {
+      const authUser = verifyAuth(request);
+      if (!authUser) return json({ error: 'Unauthorized' }, 401);
+      const prefs = await request.json();
+      await db.collection('users').updateOne({ id: authUser.id }, { $set: { notification_preferences: prefs } });
+      return json({ success: true });
     }
 
     // PUT /api/admin/users/:id/verify

@@ -17,7 +17,7 @@ import {
   Briefcase, Stethoscope, ChevronRight,
   Sparkles, Shield, Globe, Zap, Search, Check,
   Handshake, Target, Clock, Eye, BadgeCheck, Brain,
-  Activity, BarChart3, Rocket
+  Activity, BarChart3, Rocket, Bell, Flag, Ban, Settings
 } from 'lucide-react';
 
 // ==========================================
@@ -217,6 +217,11 @@ function LoadingScreen() {
 // NAVBAR
 // ==========================================
 function Navbar({ currentView, setView, user, onLogout }) {
+  const [notifications, setNotifications] = useState([]);
+  const [unread, setUnread] = useState(0);
+  const [showNotifs, setShowNotifs] = useState(false);
+  const notifRef = useRef(null);
+
   const navItems = [
     { id: 'discover', label: 'Find Cofounders', icon: Search },
     { id: 'matches', label: 'Messages', icon: MessageCircle },
@@ -224,6 +229,35 @@ function Navbar({ currentView, setView, user, onLogout }) {
     { id: 'projects', label: 'Projects', icon: FolderKanban },
     { id: 'profile', label: 'Profile', icon: User },
   ];
+
+  const loadNotifs = useCallback(async () => {
+    const token = localStorage.getItem('1cf_token');
+    if (!token) return;
+    try {
+      const res = await api.get('notifications', token);
+      setNotifications(res.notifications || []);
+      setUnread(res.unread || 0);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    loadNotifs();
+    const interval = setInterval(loadNotifs, 30000);
+    return () => clearInterval(interval);
+  }, [loadNotifs]);
+
+  useEffect(() => {
+    const handler = (e) => { if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotifs(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const markAllRead = async () => {
+    const token = localStorage.getItem('1cf_token');
+    await api.post('notifications/read', {}, token);
+    setUnread(0);
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  };
 
   return (
     <nav className="sticky top-0 z-50 glass border-b border-white/40 shadow-sm" data-testid="main-navbar">
@@ -251,7 +285,42 @@ function Navbar({ currentView, setView, user, onLogout }) {
               </button>
             );
           })}
-          <div className="w-px h-6 bg-slate-200 mx-2" />
+          <div className="w-px h-6 bg-slate-200 mx-1" />
+
+          {/* Notification Bell */}
+          <div className="relative" ref={notifRef}>
+            <button data-testid="nav-notifications" onClick={() => { setShowNotifs(!showNotifs); if (!showNotifs && unread > 0) markAllRead(); }} className="relative p-2 text-slate-400 hover:text-slate-700 transition-all rounded-xl hover:bg-slate-100">
+              <Bell className="h-4 w-4" />
+              {unread > 0 && <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{unread > 9 ? '9+' : unread}</span>}
+            </button>
+            {showNotifs && (
+              <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50" data-testid="notifications-dropdown">
+                <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                  <span className="text-sm font-bold text-slate-900">Notifications</span>
+                  {unread > 0 && <button onClick={markAllRead} className="text-xs text-teal-600 hover:text-teal-800 font-medium">Mark all read</button>}
+                </div>
+                <div className="max-h-80 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="p-6 text-center"><Bell className="h-8 w-8 text-slate-300 mx-auto mb-2" /><p className="text-xs text-slate-400">No notifications yet</p></div>
+                  ) : (
+                    notifications.slice(0, 15).map(n => (
+                      <div key={n.id} className={`px-4 py-3 border-b border-slate-50 hover:bg-slate-50 transition-colors ${!n.read ? 'bg-teal-50/30' : ''}`}>
+                        <p className="text-sm font-medium text-slate-800">{n.title}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">{n.message}</p>
+                        <p className="text-[10px] text-slate-400 mt-1">{new Date(n.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Settings */}
+          <a href="/settings" data-testid="nav-settings" className="p-2 text-slate-400 hover:text-slate-700 transition-all rounded-xl hover:bg-slate-100">
+            <Settings className="h-4 w-4" />
+          </a>
+
           <button data-testid="nav-logout" onClick={onLogout} className="p-2 text-slate-400 hover:text-red-500 transition-all duration-200 rounded-xl hover:bg-red-50">
             <LogOut className="h-4 w-4" />
           </button>
@@ -411,12 +480,19 @@ function LandingView({ onGetStarted }) {
 
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-3">
-            <img src="/logo-header.jpeg" alt="Manavta | 1CoFounder" className="h-12 object-contain" />
-            <span className="text-sm text-slate-400">| A Manavta Foundation Initiative</span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
+            <div className="flex items-center gap-3">
+              <img src="/logo-header.jpeg" alt="Manavta | 1CoFounder" className="h-12 object-contain" />
+              <span className="text-sm text-slate-400">| A Manavta Foundation Initiative</span>
+            </div>
+            <p className="text-sm text-slate-400">Accelerating healthcare innovation through collaboration.</p>
           </div>
-          <p className="text-sm text-slate-400">Accelerating healthcare innovation through collaboration.</p>
+          <div className="flex flex-wrap justify-center gap-4 pt-4 border-t border-slate-100">
+            <a href="/terms" data-testid="footer-terms" className="text-xs text-slate-400 hover:text-teal-600 transition-colors">Terms of Service</a>
+            <a href="/privacy" data-testid="footer-privacy" className="text-xs text-slate-400 hover:text-teal-600 transition-colors">Privacy Policy</a>
+            <a href="/community-guidelines" data-testid="footer-guidelines" className="text-xs text-slate-400 hover:text-teal-600 transition-colors">Community Guidelines</a>
+          </div>
         </div>
       </footer>
     </div>
@@ -718,6 +794,7 @@ function TagSelector({ label, options, selected, onChange, max }) {
 function ProfileSummary({ user, onEdit }) {
   const gradient = getGradient(user?.name);
   const locationStr = [user?.city, user?.country].filter(Boolean).join(', ');
+  const completeness = user?.profile_completeness || 0;
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8" data-testid="profile-summary">
@@ -727,6 +804,21 @@ function ProfileSummary({ user, onEdit }) {
           <User className="h-4 w-4" /> Edit Profile
         </button>
       </div>
+
+      {/* Profile Completeness */}
+      {completeness < 100 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mb-4 flex items-center gap-4" data-testid="profile-completeness-card">
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-amber-800">Profile {completeness}% complete</p>
+            <p className="text-xs text-amber-600 mt-0.5">Complete profiles rank higher in co-founder discovery.</p>
+          </div>
+          <div className="w-24">
+            <div className="w-full bg-amber-200 rounded-full h-2 overflow-hidden">
+              <div className="h-2 rounded-full bg-amber-500 transition-all" style={{ width: `${completeness}%` }} />
+            </div>
+          </div>
+        </div>
+      )}
 
       <Card className="shadow-xl shadow-slate-200/50 border-0 rounded-2xl overflow-hidden">
         <div className={`bg-gradient-to-br ${gradient} px-6 pt-8 pb-6`}>
@@ -1257,6 +1349,10 @@ function DiscoverView({ user, token, onChat }) {
 
           {/* Action Buttons */}
           <div className="px-6 pb-6 pt-2">
+            <div className="flex justify-end gap-1 mb-3">
+              <button data-testid="report-profile-btn" onClick={async () => { const reason = prompt('Report reason:'); if (reason) { await api.post('reports', { target_type: 'user', target_id: profiles[idx].id, reason }, token); alert('Report submitted. Thank you.'); } }} className="p-1.5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 rounded-lg transition-colors" title="Report"><Flag className="h-3.5 w-3.5" /></button>
+              <button data-testid="block-profile-btn" onClick={async () => { if (confirm(`Block ${profiles[idx].name}?`)) { await api.post('users/block', { blocked_id: profiles[idx].id }, token); handleSwipe('pass'); } }} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Block"><Ban className="h-3.5 w-3.5" /></button>
+            </div>
             <Separator className="mb-5" />
             <div className="grid grid-cols-2 gap-3">
               <Button

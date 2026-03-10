@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Users, AlertTriangle, FolderKanban, ShieldCheck,
   Flag, Search, ChevronLeft, ChevronRight, LogOut, Eye, Trash2,
   Ban, CheckCircle, XCircle, Activity, Clock, UserPlus, FileText,
-  Briefcase, Filter, RefreshCw, Menu, X
+  Briefcase, Filter, RefreshCw, Menu, X, Heart, MessageCircle
 } from 'lucide-react';
 
 const BASE = process.env.NEXT_PUBLIC_BASE_URL || '';
@@ -259,13 +259,18 @@ function DashboardView({ token }) {
         <button onClick={load} className="p-2 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"><RefreshCw className="h-4 w-4" /></button>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 mb-4">
         <StatCard label="Total Users" value={stats?.totalUsers} icon={Users} color="teal" />
         <StatCard label="New Today" value={stats?.newUsersToday} icon={UserPlus} color="blue" />
         <StatCard label="Total Problems" value={stats?.totalProblems} icon={FileText} color="emerald" />
         <StatCard label="Total Projects" value={stats?.totalProjects} icon={FolderKanban} color="purple" />
-        <StatCard label="Pending Verify" value={stats?.pendingVerifications} icon={ShieldCheck} color="amber" />
         <StatCard label="Flagged Content" value={stats?.flaggedContent} icon={AlertTriangle} color="red" />
+      </div>
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-8">
+        <StatCard label="Total Matches" value={stats?.totalMatches} icon={Heart} color="teal" />
+        <StatCard label="Messages Sent" value={stats?.totalMessages} icon={MessageCircle} color="blue" />
+        <StatCard label="Active Projects" value={stats?.activeProjects} icon={Activity} color="emerald" />
+        <StatCard label="Pending Verify" value={stats?.pendingVerifications} icon={ShieldCheck} color="amber" />
       </div>
 
       <h2 className="text-lg font-bold text-white mb-4">Moderation Queue</h2>
