@@ -18,6 +18,7 @@ A nonprofit web platform for healthcare innovators to find co-founders and colla
 ## Design System (Implemented ✅)
 - **Color Palette**: Teal/emerald health-tech gradient (#0f766e → #14b8a6)
 - **Typography**: Clean, bold headings (extrabold), relaxed body text
+- **Brand Assets**: Manavta + 1CoFounder combined logo (header/nav), 1CoFounder icon (favicon/auth), "A Manavta Foundation Initiative" in footer
 - **Components**: Rounded corners (xl-3xl), gradient buttons, glass-morphism navbar
 - **Animations**: Fade-in-up, slide-out swipe, match celebration, pulse glow
 - **Pattern**: Healthcare cross SVG pattern on hero backgrounds
@@ -55,6 +56,8 @@ A nonprofit web platform for healthcare innovators to find co-founders and colla
 - [x] Profile summary view (fix: no longer shows onboarding for completed profiles)
 - [x] data-testid attributes on all interactive elements
 - [x] Responsive design
+- [x] Brand logos integrated (Manavta + 1CoFounder header, 1CoFounder favicon)
+- [x] Footer updated with "A Manavta Foundation Initiative"
 - [x] Comprehensive frontend testing — all passed
 
 ## Upcoming Tasks

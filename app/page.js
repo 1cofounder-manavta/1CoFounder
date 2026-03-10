@@ -135,9 +135,7 @@ function LoadingScreen() {
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
       <div className="text-center">
         <div className="inline-flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-2xl btn-gradient flex items-center justify-center animate-pulse-glow">
-            <Stethoscope className="h-6 w-6 text-white" />
-          </div>
+          <img src="/logo-icon.jpeg" alt="1CoFounder" className="h-12 w-12 rounded-2xl object-contain animate-pulse-glow shadow-lg" />
           <span className="text-2xl font-bold text-gradient">1CoFounder</span>
         </div>
         <div className="flex gap-1.5 justify-center">
@@ -166,10 +164,7 @@ function Navbar({ currentView, setView, user, onLogout }) {
     <nav className="sticky top-0 z-50 glass border-b border-white/40 shadow-sm" data-testid="main-navbar">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         <button data-testid="nav-logo" onClick={() => setView('discover')} className="flex items-center gap-2.5 hover:opacity-80 transition-all duration-200">
-          <div className="w-8 h-8 rounded-xl btn-gradient flex items-center justify-center">
-            <Stethoscope className="h-4 w-4 text-white" />
-          </div>
-          <span className="text-lg font-bold text-gradient hidden sm:inline">1CoFounder</span>
+          <img src="/logo-header.jpeg" alt="Manavta | 1CoFounder" className="h-12 object-contain" />
         </button>
         <div className="flex items-center gap-0.5">
           {navItems.map(item => {
@@ -233,11 +228,10 @@ function LandingView({ onGetStarted }) {
 
         {/* Nav */}
         <nav className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-5 flex justify-between items-center">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/20">
-              <Stethoscope className="h-5 w-5 text-white" />
+          <div className="flex items-center">
+            <div className="bg-white/95 backdrop-blur-sm rounded-xl px-4 py-2 shadow-lg">
+              <img src="/logo-header.jpeg" alt="Manavta | 1CoFounder" className="h-12 object-contain" />
             </div>
-            <span className="text-xl font-bold text-white">1CoFounder</span>
           </div>
           <Button data-testid="landing-get-started-btn" onClick={onGetStarted} className="bg-white text-teal-700 hover:bg-white/90 rounded-xl font-semibold shadow-lg shadow-black/10">
             Get Started
@@ -353,12 +347,9 @@ function LandingView({ onGetStarted }) {
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg btn-gradient flex items-center justify-center">
-              <Stethoscope className="h-3.5 w-3.5 text-white" />
-            </div>
-            <span className="font-bold text-gradient">1CoFounder</span>
-            <span className="text-sm text-slate-400">| A nonprofit platform</span>
+          <div className="flex items-center gap-3">
+            <img src="/logo-header.jpeg" alt="Manavta | 1CoFounder" className="h-12 object-contain" />
+            <span className="text-sm text-slate-400">| A Manavta Foundation Initiative</span>
           </div>
           <p className="text-sm text-slate-400">Accelerating healthcare innovation through collaboration.</p>
         </div>
@@ -405,9 +396,7 @@ function AuthView({ onAuth }) {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2.5 mb-3">
-            <div className="w-10 h-10 rounded-2xl btn-gradient flex items-center justify-center shadow-lg shadow-teal-600/20">
-              <Stethoscope className="h-5 w-5 text-white" />
-            </div>
+            <img src="/logo-icon.jpeg" alt="1CoFounder" className="h-10 w-10 rounded-2xl object-contain shadow-lg shadow-teal-600/20" />
             <span className="text-2xl font-bold text-gradient">1CoFounder</span>
           </div>
           <p className="text-slate-500">Find your healthcare co-founder</p>
@@ -656,9 +645,7 @@ function ProfileView({ user, token, onUpdate }) {
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2.5 mb-3">
-            <div className="w-9 h-9 rounded-xl btn-gradient flex items-center justify-center">
-              <Stethoscope className="h-4.5 w-4.5 text-white" />
-            </div>
+            <img src="/logo-icon.jpeg" alt="1CoFounder" className="h-9 w-9 rounded-xl object-contain" />
             <span className="text-xl font-bold text-gradient">1CoFounder</span>
           </div>
           <h1 className="text-2xl font-extrabold text-slate-900 mb-2">{user?.profile_complete ? 'Edit Your Profile' : 'Build Your Profile'}</h1>

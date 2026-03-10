@@ -2,7 +2,11 @@ import './globals.css'
 
 export const metadata = {
   title: '1CoFounder - Find Your Healthcare Co-Founder',
-  description: 'A nonprofit platform where healthcare innovators find cofounders and collaborate to solve healthcare problems.',
+  description: 'A nonprofit platform where healthcare innovators find cofounders and collaborate to solve healthcare problems. A Manavta Foundation Initiative.',
+  icons: {
+    icon: '/logo-icon.jpeg',
+    apple: '/logo-icon.jpeg',
+  },
 }
 
 export default function RootLayout({ children }) {
