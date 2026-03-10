@@ -24,11 +24,76 @@ import {
 // CONSTANTS
 // ==========================================
 const ROLES = ['Doctor', 'Engineer', 'Researcher', 'Business Operator', 'Investor', 'Student'];
-const SKILLS = ['Cardiology', 'ICU Medicine', 'Psychiatry', 'Machine Learning', 'AI Engineering', 'Biomedical Engineering', 'Full Stack Development', 'Product Management', 'Fundraising'];
-const INTERESTS = ['AI Healthcare', 'Medical Devices', 'Digital Health', 'Diagnostics', 'Hospital Operations', 'Mental Health', "Women's Health", 'Public Health', 'Remote Monitoring'];
+const SKILLS_ONTOLOGY = {
+  'Clinical': ['Cardiology','Neurology','ICU Medicine','Emergency Medicine','Pediatrics','Oncology','Dermatology','Radiology','Psychiatry','Endocrinology','Public Health','Ophthalmology','Orthopedics','Anesthesiology','Pathology','Surgery','Internal Medicine','Family Medicine','Geriatrics','Nephrology'],
+  'Engineering': ['Machine Learning','AI Engineering','Computer Vision','Natural Language Processing','Data Engineering','Full Stack Development','Mobile Development','Cloud Architecture','DevOps','Cybersecurity','Backend Development','Frontend Development','Blockchain','Robotics','IoT'],
+  'Biomedical / Hardware': ['Biomedical Engineering','Medical Devices','Wearables','Biosensors','Embedded Systems','Signal Processing','Medical Imaging','3D Printing','Nanotechnology','Lab Automation'],
+  'Research': ['Clinical Research','Biostatistics','Bioinformatics','Genomics','Drug Discovery','Clinical Trials','Epidemiology','Health Data Science','Proteomics','Neuroscience'],
+  'Business / Startup': ['Product Management','Healthcare Operations','Startup Strategy','Fundraising','Regulatory Affairs','Market Access','Growth Marketing','Sales','Legal','Finance','Venture Capital','Operations Management'],
+  'Health System': ['Hospital Administration','Health Policy','Insurance Systems','Healthcare Economics','Public Health Programs','Quality Improvement','Supply Chain','Health Informatics','Telemedicine Operations','Patient Safety'],
+};
+const ALL_SKILLS = Object.values(SKILLS_ONTOLOGY).flat();
+
+const INTERESTS_ONTOLOGY = [
+  'AI Healthcare','Medical Devices','Digital Health','Diagnostics','Remote Monitoring',
+  'Mental Health',"Women's Health",'Chronic Disease','Telemedicine','Health Data',
+  'Clinical Workflow','Rural Healthcare','Hospital Automation','Preventive Medicine',
+  'Longevity','Precision Medicine','Public Health','Pediatric Health','Elder Care',
+  'Rehabilitation','Drug Delivery','Point-of-Care Testing','Health Equity',
+  'Surgical Innovation','Emergency Care','Dental Health','Dermatology Tech',
+  'Ophthalmology Tech','Fertility Tech','Sleep Health','Nutrition Tech',
+];
+
+const SKILLS = ALL_SKILLS; // backward-compat
+const INTERESTS = INTERESTS_ONTOLOGY;
 const STARTUP_STAGES = ['Idea', 'Problem Validation', 'MVP', 'Startup'];
 const COMMITMENT_LEVELS = ['Exploring', 'Part Time', 'Full Time'];
 const LOOKING_FOR = ['Clinician', 'AI Engineer', 'Software Engineer', 'Hardware Engineer', 'Product Manager', 'Business Operator'];
+
+const COUNTRIES = ['Afghanistan','Albania','Algeria','Andorra','Angola','Argentina','Armenia','Australia','Austria','Azerbaijan','Bahamas','Bahrain','Bangladesh','Barbados','Belarus','Belgium','Belize','Benin','Bhutan','Bolivia','Bosnia and Herzegovina','Botswana','Brazil','Brunei','Bulgaria','Burkina Faso','Burundi','Cambodia','Cameroon','Canada','Central African Republic','Chad','Chile','China','Colombia','Congo','Costa Rica','Croatia','Cuba','Cyprus','Czech Republic','Denmark','Djibouti','Dominican Republic','Ecuador','Egypt','El Salvador','Estonia','Eswatini','Ethiopia','Fiji','Finland','France','Gabon','Gambia','Georgia','Germany','Ghana','Greece','Guatemala','Guinea','Guyana','Haiti','Honduras','Hungary','Iceland','India','Indonesia','Iran','Iraq','Ireland','Israel','Italy','Jamaica','Japan','Jordan','Kazakhstan','Kenya','Kuwait','Kyrgyzstan','Laos','Latvia','Lebanon','Liberia','Libya','Lithuania','Luxembourg','Madagascar','Malawi','Malaysia','Maldives','Mali','Malta','Mauritania','Mauritius','Mexico','Moldova','Monaco','Mongolia','Montenegro','Morocco','Mozambique','Myanmar','Namibia','Nepal','Netherlands','New Zealand','Nicaragua','Niger','Nigeria','North Korea','North Macedonia','Norway','Oman','Pakistan','Palestine','Panama','Papua New Guinea','Paraguay','Peru','Philippines','Poland','Portugal','Qatar','Romania','Russia','Rwanda','Saudi Arabia','Senegal','Serbia','Sierra Leone','Singapore','Slovakia','Slovenia','Somalia','South Africa','South Korea','South Sudan','Spain','Sri Lanka','Sudan','Suriname','Sweden','Switzerland','Syria','Taiwan','Tajikistan','Tanzania','Thailand','Togo','Trinidad and Tobago','Tunisia','Turkey','Turkmenistan','Uganda','Ukraine','United Arab Emirates','United Kingdom','United States','Uruguay','Uzbekistan','Venezuela','Vietnam','Yemen','Zambia','Zimbabwe'];
+
+const CITIES_BY_COUNTRY = {
+  'India': ['Mumbai','Delhi','Bangalore','Hyderabad','Chennai','Kolkata','Pune','Ahmedabad','Jaipur','Lucknow','Chandigarh','Kochi','Indore','Bhopal','Nagpur','Coimbatore','Thiruvananthapuram','Gurgaon','Noida','Visakhapatnam'],
+  'United States': ['New York','San Francisco','Los Angeles','Chicago','Boston','Seattle','Austin','Houston','Philadelphia','San Diego','Denver','Atlanta','Miami','Dallas','Washington DC','San Jose','Portland','Minneapolis','Nashville','Raleigh'],
+  'United Kingdom': ['London','Manchester','Birmingham','Edinburgh','Glasgow','Bristol','Leeds','Liverpool','Cambridge','Oxford','Sheffield','Nottingham','Cardiff','Belfast','Newcastle'],
+  'Canada': ['Toronto','Vancouver','Montreal','Ottawa','Calgary','Edmonton','Winnipeg','Halifax','Quebec City','Victoria'],
+  'Germany': ['Berlin','Munich','Hamburg','Frankfurt','Cologne','Stuttgart','Düsseldorf','Dresden','Leipzig','Heidelberg'],
+  'Australia': ['Sydney','Melbourne','Brisbane','Perth','Adelaide','Canberra','Gold Coast','Hobart','Darwin','Newcastle'],
+  'Singapore': ['Singapore'],
+  'Japan': ['Tokyo','Osaka','Kyoto','Yokohama','Nagoya','Sapporo','Kobe','Fukuoka','Hiroshima','Sendai'],
+  'China': ['Beijing','Shanghai','Guangzhou','Shenzhen','Hangzhou','Chengdu','Wuhan','Nanjing','Tianjin','Xian'],
+  'France': ['Paris','Lyon','Marseille','Toulouse','Nice','Bordeaux','Strasbourg','Lille','Nantes','Montpellier'],
+  'Netherlands': ['Amsterdam','Rotterdam','The Hague','Utrecht','Eindhoven','Leiden','Groningen','Delft','Maastricht'],
+  'Switzerland': ['Zurich','Geneva','Basel','Bern','Lausanne','Lucerne','Lugano','St. Gallen'],
+  'Israel': ['Tel Aviv','Jerusalem','Haifa','Beer Sheva','Herzliya','Ramat Gan','Petah Tikva'],
+  'South Korea': ['Seoul','Busan','Incheon','Daejeon','Daegu','Gwangju','Suwon','Seongnam'],
+  'Brazil': ['São Paulo','Rio de Janeiro','Brasília','Belo Horizonte','Curitiba','Porto Alegre','Salvador','Recife','Campinas'],
+  'Nigeria': ['Lagos','Abuja','Port Harcourt','Ibadan','Kano','Enugu','Benin City','Kaduna'],
+  'South Africa': ['Johannesburg','Cape Town','Durban','Pretoria','Port Elizabeth','Bloemfontein'],
+  'Kenya': ['Nairobi','Mombasa','Kisumu','Nakuru','Eldoret'],
+  'United Arab Emirates': ['Dubai','Abu Dhabi','Sharjah','Ajman','Ras Al Khaimah'],
+  'Saudi Arabia': ['Riyadh','Jeddah','Mecca','Medina','Dammam','Khobar'],
+  'Mexico': ['Mexico City','Guadalajara','Monterrey','Puebla','Tijuana','Cancún'],
+  'Italy': ['Rome','Milan','Florence','Naples','Turin','Bologna','Venice','Genoa','Palermo'],
+  'Spain': ['Madrid','Barcelona','Valencia','Seville','Bilbao','Malaga','Zaragoza'],
+  'Sweden': ['Stockholm','Gothenburg','Malmö','Uppsala','Linköping','Lund'],
+  'Denmark': ['Copenhagen','Aarhus','Odense','Aalborg'],
+  'Norway': ['Oslo','Bergen','Trondheim','Stavanger'],
+  'Finland': ['Helsinki','Tampere','Turku','Oulu','Espoo'],
+  'Ireland': ['Dublin','Cork','Galway','Limerick','Waterford'],
+  'Poland': ['Warsaw','Kraków','Wrocław','Gdańsk','Poznań','Łódź','Katowice'],
+  'Turkey': ['Istanbul','Ankara','Izmir','Antalya','Bursa'],
+  'Egypt': ['Cairo','Alexandria','Giza','Luxor','Aswan'],
+  'Bangladesh': ['Dhaka','Chittagong','Khulna','Rajshahi','Sylhet'],
+  'Pakistan': ['Karachi','Lahore','Islamabad','Rawalpindi','Faisalabad','Peshawar'],
+  'Sri Lanka': ['Colombo','Kandy','Galle','Jaffna'],
+  'Malaysia': ['Kuala Lumpur','Penang','Johor Bahru','Kuching','Kota Kinabalu'],
+  'Thailand': ['Bangkok','Chiang Mai','Phuket','Pattaya','Khon Kaen'],
+  'Indonesia': ['Jakarta','Surabaya','Bandung','Bali','Yogyakarta','Medan'],
+  'Philippines': ['Manila','Cebu','Davao','Quezon City','Makati'],
+  'Vietnam': ['Ho Chi Minh City','Hanoi','Da Nang','Hai Phong','Can Tho'],
+  'Russia': ['Moscow','Saint Petersburg','Novosibirsk','Yekaterinburg','Kazan'],
+};
 
 const AVATAR_COLORS = ['bg-teal-500', 'bg-cyan-600', 'bg-emerald-500', 'bg-violet-500', 'bg-rose-500', 'bg-amber-500', 'bg-blue-500', 'bg-indigo-500'];
 const AVATAR_GRADIENT = [
@@ -466,6 +531,154 @@ function AuthView({ onAuth }) {
 // ==========================================
 // TAG SELECTOR COMPONENT
 // ==========================================
+// ==========================================
+// SEARCHABLE TAG INPUT (Skills/Interests)
+// ==========================================
+function SearchableTagInput({ label, options, grouped, selected, onChange, max, placeholder, allowCustom = true, testId }) {
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const allOptions = grouped ? Object.entries(grouped).flatMap(([cat, items]) => items.map(i => ({ label: i, category: cat }))) : options.map(o => ({ label: o, category: null }));
+
+  const filtered = query.trim()
+    ? allOptions.filter(o => o.label.toLowerCase().includes(query.toLowerCase()) && !selected.includes(o.label))
+    : allOptions.filter(o => !selected.includes(o.label)).slice(0, 30);
+
+  const exactMatch = allOptions.some(o => o.label.toLowerCase() === query.trim().toLowerCase());
+  const canAddCustom = allowCustom && query.trim().length >= 2 && !exactMatch && !selected.includes(query.trim());
+  const atLimit = max && selected.length >= max;
+
+  const add = (val) => {
+    if (atLimit) return;
+    onChange([...selected, val]);
+    setQuery('');
+  };
+
+  const remove = (val) => onChange(selected.filter(s => s !== val));
+
+  // Group filtered results
+  const groupedResults = {};
+  filtered.forEach(o => {
+    const cat = o.category || 'Other';
+    if (!groupedResults[cat]) groupedResults[cat] = [];
+    groupedResults[cat].push(o.label);
+  });
+
+  return (
+    <div className="space-y-2" ref={ref}>
+      <div className="flex items-center justify-between">
+        <Label className="text-slate-700">{label}</Label>
+        {max && <span className={`text-xs ${selected.length >= max ? 'text-amber-600 font-medium' : 'text-slate-400'}`}>{selected.length}/{max}</span>}
+      </div>
+      {selected.length > 0 && (
+        <div className="flex flex-wrap gap-1.5" data-testid={testId ? `${testId}-tags` : undefined}>
+          {selected.map(s => {
+            const isKnown = allOptions.some(o => o.label === s);
+            return (
+              <span key={s} className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all ${isKnown ? getTagColor(s) + ' border-current' : 'bg-slate-100 text-slate-600 border-slate-300 border-dashed'}`}>
+                {s}
+                {!isKnown && <span className="text-[10px] opacity-60">custom</span>}
+                <button type="button" onClick={() => remove(s)} className="ml-0.5 hover:text-red-500 transition-colors" data-testid={testId ? `${testId}-remove-${s.replace(/\s+/g, '-').toLowerCase()}` : undefined}>&times;</button>
+              </span>
+            );
+          })}
+        </div>
+      )}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+        <input
+          data-testid={testId}
+          type="text"
+          value={query}
+          onChange={e => { setQuery(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          placeholder={atLimit ? `Maximum ${max} selected` : (placeholder || `Search ${label.toLowerCase()}...`)}
+          disabled={atLimit}
+          className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:bg-slate-50 disabled:text-slate-400"
+        />
+        {open && !atLimit && (filtered.length > 0 || canAddCustom) && (
+          <div className="absolute z-30 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto" data-testid={testId ? `${testId}-dropdown` : undefined}>
+            {canAddCustom && (
+              <button type="button" onClick={() => add(query.trim())} className="w-full px-3 py-2.5 text-left text-sm hover:bg-teal-50 flex items-center gap-2 border-b border-slate-100">
+                <Plus className="h-3.5 w-3.5 text-teal-600" />
+                <span className="text-teal-700 font-medium">Add &quot;{query.trim()}&quot;</span>
+                <span className="text-xs text-slate-400 ml-auto">custom</span>
+              </button>
+            )}
+            {Object.entries(groupedResults).map(([cat, items]) => (
+              <div key={cat}>
+                {grouped && <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50 sticky top-0">{cat}</div>}
+                {items.slice(0, 10).map(item => (
+                  <button key={item} type="button" onClick={() => add(item)} className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-teal-50 hover:text-teal-800 transition-colors">
+                    {item}
+                  </button>
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// SEARCHABLE SELECT (Country/City)
+// ==========================================
+function SearchableDropdown({ label, options, value, onChange, placeholder, testId }) {
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const filtered = query.trim()
+    ? options.filter(o => o.toLowerCase().includes(query.toLowerCase()))
+    : options;
+
+  return (
+    <div className="space-y-2" ref={ref}>
+      <Label className="text-slate-700">{label}</Label>
+      <div className="relative">
+        <input
+          data-testid={testId}
+          type="text"
+          value={open ? query : (value || '')}
+          onChange={e => { setQuery(e.target.value); setOpen(true); if (!e.target.value) onChange(''); }}
+          onFocus={() => { setOpen(true); setQuery(value || ''); }}
+          placeholder={placeholder}
+          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 h-11 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+        />
+        {value && !open && (
+          <button type="button" onClick={() => { onChange(''); setQuery(''); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+            <X className="h-3.5 w-3.5" />
+          </button>
+        )}
+        {open && filtered.length > 0 && (
+          <div className="absolute z-30 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto">
+            {filtered.slice(0, 50).map(opt => (
+              <button key={opt} type="button" onClick={() => { onChange(opt); setOpen(false); setQuery(''); }} className={`w-full px-3 py-2 text-left text-sm hover:bg-teal-50 hover:text-teal-800 transition-colors ${opt === value ? 'bg-teal-50 text-teal-700 font-medium' : 'text-slate-700'}`}>
+                {opt}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function TagSelector({ label, options, selected, onChange, max }) {
   const toggle = (opt) => {
     if (selected.includes(opt)) {
@@ -682,14 +895,22 @@ function ProfileView({ user, token, onUpdate }) {
                   </Select>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-slate-700">City</Label>
-                    <Input data-testid="profile-city-input" value={form.city} onChange={e => updateField('city', e.target.value)} placeholder="e.g. Mumbai" className="rounded-xl h-11" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-slate-700">Country</Label>
-                    <Input data-testid="profile-country-input" value={form.country} onChange={e => updateField('country', e.target.value)} placeholder="e.g. India" className="rounded-xl h-11" />
-                  </div>
+                  <SearchableDropdown
+                    label="Country"
+                    options={COUNTRIES}
+                    value={form.country}
+                    onChange={v => { updateField('country', v); if (v !== form.country) updateField('city', ''); }}
+                    placeholder="Select country..."
+                    testId="profile-country-select"
+                  />
+                  <SearchableDropdown
+                    label="City"
+                    options={CITIES_BY_COUNTRY[form.country] || []}
+                    value={form.city}
+                    onChange={v => updateField('city', v)}
+                    placeholder={form.country ? 'Select city...' : 'Select country first'}
+                    testId="profile-city-select"
+                  />
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -716,9 +937,27 @@ function ProfileView({ user, token, onUpdate }) {
                   <h2 className="text-lg font-bold text-slate-900">Skills & Interests</h2>
                   <p className="text-sm text-slate-500">What do you bring to the table?</p>
                 </div>
-                <TagSelector label="Your Skills" options={SKILLS} selected={form.skills} onChange={v => updateField('skills', v)} max={8} />
+                <SearchableTagInput
+                  label="Your Skills"
+                  grouped={SKILLS_ONTOLOGY}
+                  selected={form.skills}
+                  onChange={v => updateField('skills', v)}
+                  max={8}
+                  placeholder="Search skills (e.g. Machine Learning, Cardiology)..."
+                  allowCustom={true}
+                  testId="profile-skills-input"
+                />
                 <Separator />
-                <TagSelector label="Healthcare Interests" options={INTERESTS} selected={form.interests} onChange={v => updateField('interests', v)} max={8} />
+                <SearchableTagInput
+                  label="Healthcare Interests"
+                  options={INTERESTS_ONTOLOGY}
+                  selected={form.interests}
+                  onChange={v => updateField('interests', v)}
+                  max={8}
+                  placeholder="Search interests (e.g. AI Healthcare, Digital Health)..."
+                  allowCustom={true}
+                  testId="profile-interests-input"
+                />
               </div>
             )}
 
