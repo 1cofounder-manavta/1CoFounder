@@ -171,7 +171,7 @@ backend:
     file: "app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -179,6 +179,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ Profile updates working correctly. Sets profile_complete=true and updates all profile fields."
+      - working: "NA"
+        agent: "main"
+        comment: "Updated to support city, country fields (in addition to location). Need to verify these new fields save correctly."
 
   - task: "Discover users"
     implemented: true
@@ -280,7 +283,8 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Update user profile"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -290,3 +294,5 @@ agent_communication:
     message: "Full MVP built with all features. Backend uses MongoDB with JWT auth. All API endpoints need testing. Base URL: https://health-cofound.preview.emergentagent.com. Please test all endpoints in sequence: signup -> login -> me -> profile update -> discover -> swipe/match -> matches -> messages -> problems -> projects."
   - agent: "testing"
     message: "✅ COMPLETE: All 17 backend API endpoints tested and working correctly! Fixed 1 MongoDB projection error in GET /api/projects. Full test suite covers: health check, auth (signup/login/me), profile updates, user discovery, swipe/match logic, messaging, problems CRUD, and projects with join functionality. Backend is fully functional and ready for production."
+  - agent: "main"
+    message: "Updated profile to support city/country fields. Updated all constants (roles, skills, interests, startup_stages, commitment_levels, looking_for) to match user specs. Please test: 1) signup a new user 2) update profile with city, country, new role values, new skill values, etc 3) verify discover shows city/country 4) verify the full swipe/match flow still works with updated fields."

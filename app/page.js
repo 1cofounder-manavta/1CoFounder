@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Heart, X, MessageCircle, Users, Lightbulb, FolderKanban,
   User, LogOut, Send, ArrowLeft, Plus, MapPin,
@@ -21,12 +22,12 @@ import {
 // ==========================================
 // CONSTANTS
 // ==========================================
-const ROLES = ['Doctor', 'Nurse', 'Engineer', 'Researcher', 'Operator/Admin', 'Investor', 'Student', 'Designer', 'Data Scientist', 'Pharmacist', 'Public Health Expert'];
-const SKILLS = ['Clinical Research', 'Software Engineering', 'Medical Devices', 'AI/ML', 'Regulatory Affairs', 'Business Development', 'Product Management', 'Data Science', 'UX Design', 'Biotechnology', 'Telemedicine', 'Public Health', 'Health Policy', 'Clinical Trials', 'Genomics'];
-const INTERESTS = ['Digital Health', 'Telemedicine', 'Mental Health', 'Chronic Disease', 'Maternal Health', 'Pediatrics', 'Oncology', 'Cardiology', 'Neuroscience', 'Drug Discovery', 'Medical Imaging', 'Health Equity', 'Elderly Care', 'Emergency Medicine', 'Preventive Care'];
-const STARTUP_STAGES = ['Idea', 'Research', 'Prototype', 'MVP', 'Growth', 'Scale'];
-const COMMITMENT_LEVELS = ['Full-time', 'Part-time', 'Advisory', 'Weekends', 'Flexible'];
-const LOOKING_FOR = ['Technical Co-founder', 'Medical Advisor', 'Business Partner', 'Designer', 'Data Scientist', 'Researcher', 'Investor', 'Mentor', 'Operations Lead'];
+const ROLES = ['Doctor', 'Engineer', 'Researcher', 'Business Operator', 'Investor', 'Student'];
+const SKILLS = ['Cardiology', 'ICU Medicine', 'Psychiatry', 'Machine Learning', 'AI Engineering', 'Biomedical Engineering', 'Full Stack Development', 'Product Management', 'Fundraising'];
+const INTERESTS = ['AI Healthcare', 'Medical Devices', 'Digital Health', 'Diagnostics', 'Hospital Operations', 'Mental Health', "Women's Health", 'Public Health', 'Remote Monitoring'];
+const STARTUP_STAGES = ['Idea', 'Problem Validation', 'MVP', 'Startup'];
+const COMMITMENT_LEVELS = ['Exploring', 'Part Time', 'Full Time'];
+const LOOKING_FOR = ['Clinician', 'AI Engineer', 'Software Engineer', 'Hardware Engineer', 'Product Manager', 'Business Operator'];
 
 const AVATAR_COLORS = ['bg-teal-500', 'bg-cyan-600', 'bg-emerald-500', 'bg-violet-500', 'bg-rose-500', 'bg-amber-500', 'bg-blue-500', 'bg-indigo-500'];
 const AVATAR_GRADIENT = [
@@ -449,13 +450,14 @@ function TagSelector({ label, options, selected, onChange, max }) {
 }
 
 // ==========================================
-// PROFILE VIEW
+// PROFILE VIEW (ONBOARDING)
 // ==========================================
 function ProfileView({ user, token, onUpdate }) {
   const [form, setForm] = useState({
     name: user?.name || '',
     role: user?.role || '',
-    location: user?.location || '',
+    city: user?.city || '',
+    country: user?.country || '',
     bio: user?.bio || '',
     skills: user?.skills || [],
     interests: user?.interests || [],
@@ -468,6 +470,9 @@ function ProfileView({ user, token, onUpdate }) {
   const [error, setError] = useState('');
 
   const updateField = (key, value) => setForm(prev => ({ ...prev, [key]: value }));
+
+  const canProceedStep1 = form.name && form.role;
+  const canProceedStep2 = form.skills.length > 0 && form.interests.length > 0;
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -486,76 +491,101 @@ function ProfileView({ user, token, onUpdate }) {
     }
   };
 
-  const totalSteps = 3;
+  const totalSteps = 4;
   const progress = (step / totalSteps) * 100;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-cyan-50 py-8 px-4">
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold mb-2">Complete Your Profile</h1>
-          <p className="text-muted-foreground">Help others find you as a co-founder</p>
-          <div className="mt-4 w-full bg-muted rounded-full h-2">
-            <div className="bg-teal-600 h-2 rounded-full transition-all duration-300" style={{ width: `${progress}%` }} />
+          <div className="inline-flex items-center gap-2 mb-3">
+            <Stethoscope className="h-6 w-6 text-teal-600" />
+            <span className="text-xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">1CoFounder</span>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">Step {step} of {totalSteps}</p>
+          <h1 className="text-2xl font-bold mb-2">Build Your Profile</h1>
+          <p className="text-muted-foreground">Tell the community who you are and what you're building</p>
+          <div className="mt-4 w-full bg-muted rounded-full h-2 max-w-md mx-auto">
+            <div className="bg-teal-600 h-2 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">Step {step} of {totalSteps}</p>
         </div>
 
         <Card className="shadow-lg border-0">
-          <CardContent className="p-6">
+          <CardContent className="p-6 sm:p-8">
+            {/* Step 1: Basic Info */}
             {step === 1 && (
-              <div className="space-y-4 animate-fade-in-up">
-                <h2 className="text-lg font-semibold">About You</h2>
-                <div className="space-y-2">
-                  <Label>Full Name</Label>
-                  <Input value={form.name} onChange={e => updateField('name', e.target.value)} placeholder="Dr. Jane Smith" />
+              <div className="space-y-5 animate-fade-in-up">
+                <div>
+                  <h2 className="text-lg font-semibold">About You</h2>
+                  <p className="text-sm text-muted-foreground">Let's start with the basics</p>
                 </div>
                 <div className="space-y-2">
-                  <Label>Your Role</Label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {ROLES.map(r => (
-                      <button
-                        key={r}
-                        type="button"
-                        onClick={() => updateField('role', r)}
-                        className={`px-3 py-2 rounded-lg text-sm border transition-all ${
-                          form.role === r
-                            ? 'bg-teal-600 text-white border-teal-600'
-                            : 'bg-white border-border hover:border-teal-300'
-                        }`}
-                      >
-                        {r}
-                      </button>
-                    ))}
+                  <Label>Full Name <span className="text-red-400">*</span></Label>
+                  <Input value={form.name} onChange={e => updateField('name', e.target.value)} placeholder="e.g. Dr. Sarah Chen" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Your Role <span className="text-red-400">*</span></Label>
+                  <Select value={form.role} onValueChange={v => updateField('role', v)}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select your role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ROLES.map(r => (
+                        <SelectItem key={r} value={r}>{r}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>City</Label>
+                    <Input value={form.city} onChange={e => updateField('city', e.target.value)} placeholder="e.g. San Francisco" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Country</Label>
+                    <Input value={form.country} onChange={e => updateField('country', e.target.value)} placeholder="e.g. United States" />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Location</Label>
-                  <Input value={form.location} onChange={e => updateField('location', e.target.value)} placeholder="San Francisco, CA" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Bio</Label>
+                  <div className="flex items-center justify-between">
+                    <Label>Short Bio</Label>
+                    <span className={`text-xs ${form.bio.length > 300 ? 'text-red-500 font-medium' : 'text-muted-foreground'}`}>
+                      {form.bio.length}/300
+                    </span>
+                  </div>
                   <Textarea
                     value={form.bio}
-                    onChange={e => updateField('bio', e.target.value)}
-                    placeholder="Tell others about yourself, your background, and what drives you in healthcare..."
+                    onChange={e => {
+                      if (e.target.value.length <= 300) updateField('bio', e.target.value);
+                    }}
+                    placeholder="Tell potential co-founders about yourself, your background, and what drives you..."
                     rows={4}
+                    className="resize-none"
                   />
                 </div>
               </div>
             )}
 
+            {/* Step 2: Skills & Interests */}
             {step === 2 && (
               <div className="space-y-6 animate-fade-in-up">
-                <h2 className="text-lg font-semibold">Skills & Interests</h2>
+                <div>
+                  <h2 className="text-lg font-semibold">Skills & Interests</h2>
+                  <p className="text-sm text-muted-foreground">What do you bring to the table?</p>
+                </div>
                 <TagSelector label="Your Skills" options={SKILLS} selected={form.skills} onChange={v => updateField('skills', v)} max={8} />
+                <Separator />
                 <TagSelector label="Healthcare Interests" options={INTERESTS} selected={form.interests} onChange={v => updateField('interests', v)} max={8} />
               </div>
             )}
 
+            {/* Step 3: Startup Preferences */}
             {step === 3 && (
               <div className="space-y-6 animate-fade-in-up">
-                <h2 className="text-lg font-semibold">Co-Founder Preferences</h2>
+                <div>
+                  <h2 className="text-lg font-semibold">Where Are You?</h2>
+                  <p className="text-sm text-muted-foreground">Your startup journey and availability</p>
+                </div>
                 <div className="space-y-2">
                   <Label>Startup Stage</Label>
                   <div className="flex flex-wrap gap-2">
@@ -564,10 +594,10 @@ function ProfileView({ user, token, onUpdate }) {
                         key={s}
                         type="button"
                         onClick={() => updateField('startup_stage', s)}
-                        className={`px-3 py-1.5 rounded-full text-sm border transition-all ${
+                        className={`px-4 py-2 rounded-lg text-sm border transition-all ${
                           form.startup_stage === s
-                            ? 'bg-teal-600 text-white border-teal-600'
-                            : 'bg-white border-border hover:border-teal-300'
+                            ? 'bg-teal-600 text-white border-teal-600 shadow-sm'
+                            : 'bg-white border-border hover:border-teal-300 hover:bg-teal-50'
                         }`}
                       >
                         {s}
@@ -583,10 +613,10 @@ function ProfileView({ user, token, onUpdate }) {
                         key={c}
                         type="button"
                         onClick={() => updateField('commitment_level', c)}
-                        className={`px-3 py-1.5 rounded-full text-sm border transition-all ${
+                        className={`px-4 py-2 rounded-lg text-sm border transition-all ${
                           form.commitment_level === c
-                            ? 'bg-teal-600 text-white border-teal-600'
-                            : 'bg-white border-border hover:border-teal-300'
+                            ? 'bg-teal-600 text-white border-teal-600 shadow-sm'
+                            : 'bg-white border-border hover:border-teal-300 hover:bg-teal-50'
                         }`}
                       >
                         {c}
@@ -594,7 +624,21 @@ function ProfileView({ user, token, onUpdate }) {
                     ))}
                   </div>
                 </div>
-                <TagSelector label="Looking For" options={LOOKING_FOR} selected={form.looking_for} onChange={v => updateField('looking_for', v)} max={5} />
+              </div>
+            )}
+
+            {/* Step 4: Looking For */}
+            {step === 4 && (
+              <div className="space-y-6 animate-fade-in-up">
+                <div>
+                  <h2 className="text-lg font-semibold">Your Ideal Co-Founder</h2>
+                  <p className="text-sm text-muted-foreground">What roles are you looking for?</p>
+                </div>
+                <TagSelector label="Looking for co-founder roles" options={LOOKING_FOR} selected={form.looking_for} onChange={v => updateField('looking_for', v)} max={5} />
+                <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
+                  <h3 className="text-sm font-medium text-teal-800 mb-1">Almost done!</h3>
+                  <p className="text-xs text-teal-700">After completing your profile, you'll be able to discover and connect with healthcare innovators who match your interests.</p>
+                </div>
               </div>
             )}
 
@@ -605,12 +649,16 @@ function ProfileView({ user, token, onUpdate }) {
                 <Button variant="outline" onClick={() => setStep(s => s - 1)}>Back</Button>
               ) : <div />}
               {step < totalSteps ? (
-                <Button onClick={() => setStep(s => s + 1)} className="bg-teal-600 hover:bg-teal-700">
+                <Button
+                  onClick={() => setStep(s => s + 1)}
+                  className="bg-teal-600 hover:bg-teal-700"
+                  disabled={step === 1 && !canProceedStep1}
+                >
                   Continue <ChevronRight className="ml-1 h-4 w-4" />
                 </Button>
               ) : (
                 <Button onClick={handleSubmit} disabled={loading} className="bg-teal-600 hover:bg-teal-700">
-                  {loading ? 'Saving...' : 'Complete Profile'}
+                  {loading ? 'Saving...' : 'Complete Profile & Start Matching'}
                 </Button>
               )}
             </div>
@@ -723,8 +771,8 @@ function DiscoverView({ user, token }) {
                 <h3 className="text-xl font-bold">{currentProfile.name}</h3>
                 <div className="flex items-center gap-2 text-white/80 text-sm">
                   {currentProfile.role && <Badge className="bg-white/20 text-white border-0 text-xs">{currentProfile.role}</Badge>}
-                  {currentProfile.location && (
-                    <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{currentProfile.location}</span>
+                  {(currentProfile.city || currentProfile.country) && (
+                    <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{[currentProfile.city, currentProfile.country].filter(Boolean).join(', ')}</span>
                   )}
                 </div>
               </div>
@@ -890,9 +938,9 @@ function MatchesView({ user, token, onChat }) {
                   </div>
                 </div>
                 <CardContent className="p-4">
-                  {mu.location && (
+                  {(mu.city || mu.country) && (
                     <p className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
-                      <MapPin className="h-3 w-3" />{mu.location}
+                      <MapPin className="h-3 w-3" />{[mu.city, mu.country].filter(Boolean).join(', ')}
                     </p>
                   )}
                   {mu.bio && <p className="text-sm text-foreground line-clamp-2 mb-3">{mu.bio}</p>}

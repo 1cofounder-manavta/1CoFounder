@@ -193,6 +193,8 @@ export async function POST(request, { params }) {
         email: email.toLowerCase(),
         password_hash: hashedPassword,
         role: '',
+        city: '',
+        country: '',
         location: '',
         bio: '',
         profile_photo: '',
@@ -402,7 +404,7 @@ export async function PUT(request, { params }) {
 
       const body = await request.json();
       const updateFields = {};
-      const allowed = ['name', 'role', 'location', 'bio', 'profile_photo', 'skills', 'interests', 'startup_stage', 'commitment_level', 'looking_for'];
+      const allowed = ['name', 'role', 'city', 'country', 'location', 'bio', 'profile_photo', 'skills', 'interests', 'startup_stage', 'commitment_level', 'looking_for'];
 
       for (const field of allowed) {
         if (body[field] !== undefined) updateFields[field] = body[field];
