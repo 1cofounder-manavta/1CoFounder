@@ -119,7 +119,7 @@ function LoadingScreen() {
 // ==========================================
 function Navbar({ currentView, setView, user, onLogout }) {
   const navItems = [
-    { id: 'discover', label: 'Discover', icon: Search },
+    { id: 'discover', label: 'Find Cofounders', icon: Search },
     { id: 'matches', label: 'Matches', icon: Heart },
     { id: 'problems', label: 'Problems', icon: Lightbulb },
     { id: 'projects', label: 'Projects', icon: FolderKanban },
@@ -670,14 +670,15 @@ function ProfileView({ user, token, onUpdate }) {
 }
 
 // ==========================================
-// DISCOVER VIEW (CORE FEATURE)
+// FIND COFOUNDERS VIEW (CORE FEATURE)
 // ==========================================
-function DiscoverView({ user, token }) {
+function DiscoverView({ user, token, onChat }) {
   const [profiles, setProfiles] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [animating, setAnimating] = useState(null); // 'left' or 'right'
   const [showMatch, setShowMatch] = useState(false);
   const [matchedUser, setMatchedUser] = useState(null);
+  const [matchId, setMatchId] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const loadProfiles = useCallback(async () => {
@@ -704,6 +705,7 @@ function DiscoverView({ user, token }) {
       const res = await api.post('swipes', { target_id: target.id, action }, token);
       if (res.match) {
         setMatchedUser(res.match_data?.matched_user);
+        setMatchId(res.match_data?.match?.id);
         setTimeout(() => setShowMatch(true), 400);
       }
     } catch (err) {
@@ -717,13 +719,18 @@ function DiscoverView({ user, token }) {
   };
 
   const currentProfile = profiles[currentIndex];
+  const remaining = profiles.length - currentIndex;
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[70vh]">
         <div className="text-center">
-          <Search className="h-12 w-12 text-teal-300 mx-auto mb-4 animate-pulse" />
-          <p className="text-muted-foreground">Finding innovators for you...</p>
+          <div className="relative mx-auto mb-6 w-16 h-16">
+            <div className="absolute inset-0 rounded-full border-4 border-teal-100" />
+            <div className="absolute inset-0 rounded-full border-4 border-teal-500 border-t-transparent animate-spin" />
+          </div>
+          <h3 className="font-semibold mb-1">Finding your best matches...</h3>
+          <p className="text-sm text-muted-foreground">Ranking profiles by compatibility</p>
         </div>
       </div>
     );
@@ -737,87 +744,120 @@ function DiscoverView({ user, token }) {
             <Users className="h-10 w-10 text-teal-500" />
           </div>
           <h2 className="text-2xl font-bold mb-2">You've Seen Everyone!</h2>
-          <p className="text-muted-foreground mb-6">Check back later for new innovators or browse the Problem Board to find collaborators.</p>
-          <Button onClick={loadProfiles} className="bg-teal-600 hover:bg-teal-700">Refresh</Button>
+          <p className="text-muted-foreground mb-6">Check back later for new healthcare innovators, or explore the Problem Board to find collaborators.</p>
+          <Button onClick={loadProfiles} className="bg-teal-600 hover:bg-teal-700">Refresh Profiles</Button>
         </div>
       </div>
     );
   }
 
   const gradient = getGradient(currentProfile.name);
+  const locationStr = [currentProfile.city, currentProfile.country].filter(Boolean).join(', ');
+  const topSkills = (currentProfile.skills || []).slice(0, 3);
+  const allInterests = currentProfile.interests || [];
+
+  // Determine stage badge color
+  const stageColors = {
+    'Idea': 'bg-blue-100 text-blue-700 border-blue-200',
+    'Problem Validation': 'bg-purple-100 text-purple-700 border-purple-200',
+    'MVP': 'bg-amber-100 text-amber-700 border-amber-200',
+    'Startup': 'bg-green-100 text-green-700 border-green-200',
+  };
+  const stageColor = stageColors[currentProfile.startup_stage] || 'bg-muted text-muted-foreground';
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-8">
-      <div className="text-center mb-6">
-        <h2 className="text-xl font-bold">Discover Co-Founders</h2>
-        <p className="text-sm text-muted-foreground">{profiles.length - currentIndex} profiles remaining</p>
+    <div className="max-w-xl mx-auto px-4 py-6">
+      {/* Page Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold">Find Cofounders</h1>
+          <p className="text-sm text-muted-foreground">Sorted by compatibility with your profile</p>
+        </div>
+        <Badge variant="outline" className="text-xs">
+          {remaining} remaining
+        </Badge>
       </div>
 
-      {/* Card */}
+      {/* Profile Card */}
       <div
         className={`transition-all duration-400 ${
           animating === 'left' ? 'animate-slide-out-left' :
           animating === 'right' ? 'animate-slide-out-right' : ''
         }`}
       >
-        <Card className="overflow-hidden shadow-xl border-0">
-          {/* Header */}
-          <div className={`bg-gradient-to-r ${gradient} p-6 text-white`}>
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-xl font-bold backdrop-blur-sm">
-                {getInitials(currentProfile.name)}
-              </div>
-              <div>
-                <h3 className="text-xl font-bold">{currentProfile.name}</h3>
-                <div className="flex items-center gap-2 text-white/80 text-sm">
-                  {currentProfile.role && <Badge className="bg-white/20 text-white border-0 text-xs">{currentProfile.role}</Badge>}
-                  {(currentProfile.city || currentProfile.country) && (
-                    <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{[currentProfile.city, currentProfile.country].filter(Boolean).join(', ')}</span>
+        <Card className="overflow-hidden shadow-xl border-0 rounded-2xl">
+          {/* Profile Header with Photo */}
+          <div className={`bg-gradient-to-br ${gradient} relative`}>
+            <div className="absolute inset-0 bg-black/10" />
+            <div className="relative px-6 pt-8 pb-6">
+              <div className="flex items-start gap-5">
+                {/* Profile Photo / Avatar */}
+                <div className="shrink-0">
+                  <div className="w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-2xl font-bold text-white border-2 border-white/30 shadow-lg">
+                    {getInitials(currentProfile.name)}
+                  </div>
+                </div>
+                {/* Name, Role, Location */}
+                <div className="min-w-0 flex-1 pt-1">
+                  <h2 className="text-xl font-bold text-white truncate">{currentProfile.name}</h2>
+                  {currentProfile.role && (
+                    <div className="mt-1">
+                      <Badge className="bg-white/25 text-white border-0 text-xs font-medium backdrop-blur-sm">
+                        {currentProfile.role}
+                      </Badge>
+                    </div>
+                  )}
+                  {locationStr && (
+                    <p className="mt-2 text-white/80 text-sm flex items-center gap-1.5">
+                      <MapPin className="h-3.5 w-3.5 shrink-0" />{locationStr}
+                    </p>
                   )}
                 </div>
               </div>
             </div>
           </div>
 
-          <CardContent className="p-6 space-y-4">
+          <CardContent className="p-6 space-y-5">
             {/* Bio */}
             {currentProfile.bio && (
               <p className="text-sm text-foreground leading-relaxed">{currentProfile.bio}</p>
             )}
 
-            {/* Stage & Commitment */}
-            <div className="flex gap-3">
-              {currentProfile.startup_stage && (
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
-                  <Target className="h-3 w-3" />{currentProfile.startup_stage} Stage
-                </div>
-              )}
-              {currentProfile.commitment_level && (
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full">
-                  <Clock className="h-3 w-3" />{currentProfile.commitment_level}
-                </div>
-              )}
-            </div>
+            {/* Startup Stage */}
+            {currentProfile.startup_stage && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Stage</span>
+                <Badge className={`text-xs font-medium ${stageColor}`}>
+                  <Zap className="h-3 w-3 mr-1" />
+                  {currentProfile.startup_stage}
+                </Badge>
+              </div>
+            )}
 
-            {/* Skills */}
-            {currentProfile.skills?.length > 0 && (
+            {/* Top 3 Skills */}
+            {topSkills.length > 0 && (
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-2">SKILLS</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {currentProfile.skills.map(s => (
-                    <Badge key={s} variant="secondary" className="text-xs bg-teal-50 text-teal-700 border-teal-200">{s}</Badge>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Top Skills</p>
+                <div className="flex flex-wrap gap-2">
+                  {topSkills.map(s => (
+                    <div key={s} className="flex items-center gap-1.5 bg-teal-50 text-teal-700 border border-teal-200 rounded-lg px-3 py-1.5 text-sm font-medium">
+                      <Check className="h-3.5 w-3.5 text-teal-500" />
+                      {s}
+                    </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Interests */}
-            {currentProfile.interests?.length > 0 && (
+            {/* Healthcare Interests */}
+            {allInterests.length > 0 && (
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-2">INTERESTS</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Healthcare Interests</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {currentProfile.interests.map(s => (
-                    <Badge key={s} variant="outline" className="text-xs">{s}</Badge>
+                  {allInterests.map(i => (
+                    <Badge key={i} variant="outline" className="text-xs font-normal">
+                      {i}
+                    </Badge>
                   ))}
                 </div>
               </div>
@@ -826,31 +866,47 @@ function DiscoverView({ user, token }) {
             {/* Looking For */}
             {currentProfile.looking_for?.length > 0 && (
               <div>
-                <p className="text-xs font-medium text-muted-foreground mb-2">LOOKING FOR</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Looking For</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {currentProfile.looking_for.map(s => (
-                    <Badge key={s} className="text-xs bg-cyan-50 text-cyan-700 border-cyan-200">{s}</Badge>
+                  {currentProfile.looking_for.map(l => (
+                    <Badge key={l} className="text-xs bg-cyan-50 text-cyan-700 border border-cyan-200 font-normal">{l}</Badge>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Commitment Level */}
+            {currentProfile.commitment_level && (
+              <div className="flex items-center gap-2 pt-1">
+                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">{currentProfile.commitment_level} commitment</span>
               </div>
             )}
           </CardContent>
 
           {/* Action Buttons */}
-          <CardFooter className="px-6 pb-6 pt-0 flex justify-center gap-6">
-            <button
-              onClick={() => handleSwipe('pass')}
-              className="w-16 h-16 rounded-full border-2 border-red-200 flex items-center justify-center hover:bg-red-50 hover:border-red-400 transition-all hover:scale-110 active:scale-95"
-            >
-              <X className="h-7 w-7 text-red-400" />
-            </button>
-            <button
-              onClick={() => handleSwipe('like')}
-              className="w-16 h-16 rounded-full border-2 border-teal-200 flex items-center justify-center hover:bg-teal-50 hover:border-teal-400 transition-all hover:scale-110 active:scale-95 bg-teal-50"
-            >
-              <Heart className="h-7 w-7 text-teal-500" />
-            </button>
-          </CardFooter>
+          <div className="px-6 pb-6 pt-2">
+            <Separator className="mb-5" />
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => handleSwipe('pass')}
+                className="h-12 text-base font-medium border-2 hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-95"
+              >
+                <X className="h-5 w-5 mr-2 text-slate-400" />
+                Skip
+              </Button>
+              <Button
+                size="lg"
+                onClick={() => handleSwipe('like')}
+                className="h-12 text-base font-medium bg-teal-600 hover:bg-teal-700 transition-all active:scale-95 shadow-md shadow-teal-200"
+              >
+                <Heart className="h-5 w-5 mr-2" />
+                Interested
+              </Button>
+            </div>
+          </div>
         </Card>
       </div>
 
@@ -860,19 +916,37 @@ function DiscoverView({ user, token }) {
           <div className="animate-match bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl" onClick={e => e.stopPropagation()}>
             <div className="text-5xl mb-4">🎉</div>
             <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">It's a Match!</h2>
-            <p className="text-muted-foreground mb-6">You and <strong>{matchedUser.name}</strong> want to connect. Start a conversation!</p>
+            <p className="text-muted-foreground mb-2">You and <strong>{matchedUser.name}</strong> both want to connect!</p>
+            <p className="text-sm text-muted-foreground mb-6">Messaging is now unlocked. Start a conversation to explore building together.</p>
             <div className="flex items-center justify-center gap-4 mb-6">
-              <div className={`w-14 h-14 rounded-full bg-gradient-to-r ${getGradient(user?.name)} flex items-center justify-center text-white font-bold`}>
+              <div className={`w-14 h-14 rounded-xl bg-gradient-to-r ${getGradient(user?.name)} flex items-center justify-center text-white font-bold shadow-lg`}>
                 {getInitials(user?.name)}
               </div>
-              <Sparkles className="h-6 w-6 text-teal-500" />
-              <div className={`w-14 h-14 rounded-full bg-gradient-to-r ${getGradient(matchedUser.name)} flex items-center justify-center text-white font-bold`}>
+              <div className="flex flex-col items-center">
+                <Sparkles className="h-6 w-6 text-teal-500" />
+                <span className="text-[10px] text-teal-600 font-medium mt-0.5">MATCHED</span>
+              </div>
+              <div className={`w-14 h-14 rounded-xl bg-gradient-to-r ${getGradient(matchedUser.name)} flex items-center justify-center text-white font-bold shadow-lg`}>
                 {getInitials(matchedUser.name)}
               </div>
             </div>
-            <Button onClick={() => setShowMatch(false)} className="w-full bg-teal-600 hover:bg-teal-700">
-              Keep Swiping
-            </Button>
+            <div className="space-y-2">
+              {onChat && matchId && (
+                <Button
+                  onClick={() => {
+                    setShowMatch(false);
+                    onChat({ id: matchId, matched_user: matchedUser });
+                  }}
+                  className="w-full bg-teal-600 hover:bg-teal-700"
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Send a Message
+                </Button>
+              )}
+              <Button variant="outline" onClick={() => setShowMatch(false)} className="w-full">
+                Keep Browsing
+              </Button>
+            </div>
           </div>
         </div>
       )}
@@ -1425,7 +1499,7 @@ export default function App() {
       {currentView === 'landing' && <LandingView onGetStarted={() => setCurrentView('auth')} />}
       {currentView === 'auth' && <AuthView onAuth={handleAuth} />}
       {currentView === 'profile' && <ProfileView user={user} token={token} onUpdate={handleProfileUpdate} />}
-      {currentView === 'discover' && <DiscoverView user={user} token={token} />}
+      {currentView === 'discover' && <DiscoverView user={user} token={token} onChat={openChat} />}
       {currentView === 'matches' && <MatchesView user={user} token={token} onChat={openChat} />}
       {currentView === 'chat' && <ChatView user={user} token={token} match={chatMatch} onBack={() => setCurrentView('matches')} />}
       {currentView === 'problems' && <ProblemsView user={user} token={token} />}

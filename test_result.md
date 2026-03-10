@@ -284,15 +284,12 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Update user profile"
+    - "Discover users with smart matching"
+    - "Swipe and match"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
   - agent: "main"
-    message: "Full MVP built with all features. Backend uses MongoDB with JWT auth. All API endpoints need testing. Base URL: https://health-cofound.preview.emergentagent.com. Please test all endpoints in sequence: signup -> login -> me -> profile update -> discover -> swipe/match -> matches -> messages -> problems -> projects."
-  - agent: "testing"
-    message: "✅ COMPLETE: All 17 backend API endpoints tested and working correctly! Fixed 1 MongoDB projection error in GET /api/projects. Full test suite covers: health check, auth (signup/login/me), profile updates, user discovery, swipe/match logic, messaging, problems CRUD, and projects with join functionality. Backend is fully functional and ready for production."
-  - agent: "main"
-    message: "Updated profile to support city/country fields. Updated all constants (roles, skills, interests, startup_stages, commitment_levels, looking_for) to match user specs. Please test: 1) signup a new user 2) update profile with city, country, new role values, new skill values, etc 3) verify discover shows city/country 4) verify the full swipe/match flow still works with updated fields."
+    message: "Updated discover endpoint with smart matching algorithm. Now scores profiles by: 1) complementary roles (3pts), 2) overlapping interests (2pts each), 3) same/adjacent startup stage (2/1pts), 4) looking-for role match (2pts). Profiles sorted by score descending. Also redesigned Find Cofounders card UI with Skip/Interested buttons. Please test: 1) signup two users with specific profiles, 2) verify discover returns users sorted by compatibility, 3) test Interested swipe creates record in swipes table, 4) test mutual Interested creates match and unlocks messaging."

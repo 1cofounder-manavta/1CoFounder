@@ -59,18 +59,86 @@ export async function GET(request, { params }) {
       const authUser = verifyAuth(request);
       if (!authUser) return json({ error: 'Unauthorized' }, 401);
 
+      // Get current user's full profile for scoring
+      const currentUser = await db.collection('users').findOne({ id: authUser.id });
+      if (!currentUser) return json({ error: 'User not found' }, 404);
+
       const swipes = await db.collection('swipes').find({ swiper_id: authUser.id }).toArray();
       const excludeIds = [...swipes.map(s => s.target_id), authUser.id];
 
-      const users = await db.collection('users')
-        .aggregate([
-          { $match: { id: { $nin: excludeIds }, profile_complete: true } },
-          { $project: { password_hash: 0, _id: 0 } },
-          { $sample: { size: 20 } }
-        ])
+      // Fetch all eligible users (no random sampling - we'll sort by score)
+      const candidates = await db.collection('users')
+        .find({ id: { $nin: excludeIds }, profile_complete: true })
+        .project({ password_hash: 0, _id: 0 })
+        .limit(100)
         .toArray();
 
-      return json({ users });
+      // Complementary role mapping (roles that work well together)
+      const complementaryRoles = {
+        'Doctor': ['Engineer', 'Researcher', 'Business Operator', 'Investor'],
+        'Engineer': ['Doctor', 'Researcher', 'Business Operator', 'Investor'],
+        'Researcher': ['Doctor', 'Engineer', 'Business Operator', 'Investor'],
+        'Business Operator': ['Doctor', 'Engineer', 'Researcher', 'Investor'],
+        'Investor': ['Doctor', 'Engineer', 'Researcher', 'Business Operator', 'Student'],
+        'Student': ['Doctor', 'Engineer', 'Researcher', 'Business Operator', 'Investor'],
+      };
+
+      // Startup stage adjacency (stages that are close together)
+      const stageOrder = ['Idea', 'Problem Validation', 'MVP', 'Startup'];
+
+      // Score each candidate
+      const scored = candidates.map(candidate => {
+        let score = 0;
+
+        // 1. Complementary role match (0-3 points)
+        const myComplementary = complementaryRoles[currentUser.role] || [];
+        if (myComplementary.includes(candidate.role)) {
+          score += 3;
+        }
+
+        // 2. Overlapping healthcare interests (0-2 per overlap, max ~6)
+        const myInterests = currentUser.interests || [];
+        const theirInterests = candidate.interests || [];
+        const interestOverlap = myInterests.filter(i => theirInterests.includes(i)).length;
+        score += interestOverlap * 2;
+
+        // 3. Same or adjacent startup stage (0-2 points)
+        const myStageIdx = stageOrder.indexOf(currentUser.startup_stage);
+        const theirStageIdx = stageOrder.indexOf(candidate.startup_stage);
+        if (myStageIdx >= 0 && theirStageIdx >= 0) {
+          const stageDiff = Math.abs(myStageIdx - theirStageIdx);
+          if (stageDiff === 0) score += 2;       // same stage
+          else if (stageDiff === 1) score += 1;   // adjacent stage
+        }
+
+        // 4. Looking-for match bonus (does the other user's role match what I'm looking for?)
+        const myLookingFor = currentUser.looking_for || [];
+        const roleToLookingFor = {
+          'Doctor': 'Clinician',
+          'Engineer': 'Software Engineer',
+          'Researcher': 'AI Engineer',
+          'Business Operator': 'Business Operator',
+          'Investor': 'Business Operator',
+          'Student': 'Software Engineer',
+        };
+        const candidateAsLookingFor = roleToLookingFor[candidate.role];
+        if (candidateAsLookingFor && myLookingFor.includes(candidateAsLookingFor)) {
+          score += 2;
+        }
+
+        return { ...candidate, _matchScore: score };
+      });
+
+      // Sort by score descending, then by created_at for tie-breaking
+      scored.sort((a, b) => {
+        if (b._matchScore !== a._matchScore) return b._matchScore - a._matchScore;
+        return new Date(b.created_at) - new Date(a.created_at);
+      });
+
+      // Return top 30, remove internal score field
+      const results = scored.slice(0, 30).map(({ _matchScore, ...user }) => user);
+
+      return json({ users: results });
     }
 
     // GET /api/users/:id
