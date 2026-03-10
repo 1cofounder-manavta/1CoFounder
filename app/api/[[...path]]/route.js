@@ -150,6 +150,59 @@ export async function GET(request, { params }) {
       return json({ user: safeUser });
     }
 
+    // GET /api/conversations (messaging hub - list all conversations with last message & unread)
+    if (path[0] === 'conversations') {
+      const authUser = verifyAuth(request);
+      if (!authUser) return json({ error: 'Unauthorized' }, 401);
+
+      const matches = await db.collection('matches')
+        .find({ $or: [{ user1_id: authUser.id }, { user2_id: authUser.id }] })
+        .toArray();
+
+      const conversations = [];
+
+      for (const match of matches) {
+        const otherId = match.user1_id === authUser.id ? match.user2_id : match.user1_id;
+        const otherUser = await db.collection('users').findOne({ id: otherId });
+
+        // Get last message
+        const lastMessages = await db.collection('messages')
+          .find({ conversation_id: match.id })
+          .sort({ created_at: -1 })
+          .limit(1)
+          .toArray();
+
+        // Count unread messages (sent by other user, not yet read by me)
+        const unreadCount = await db.collection('messages').countDocuments({
+          conversation_id: match.id,
+          sender_id: { $ne: authUser.id },
+          read_by: { $nin: [authUser.id] }
+        });
+
+        const { password_hash, _id: uId, ...safeUser } = otherUser || {};
+        const { _id: mId, ...matchClean } = match;
+
+        conversations.push({
+          match_id: match.id,
+          matched_user: safeUser,
+          last_message: lastMessages[0] ? { message: lastMessages[0].message, sender_id: lastMessages[0].sender_id, created_at: lastMessages[0].created_at } : null,
+          unread_count: unreadCount,
+          matched_at: match.created_at,
+        });
+      }
+
+      // Sort: conversations with unread first, then by most recent activity
+      conversations.sort((a, b) => {
+        if (a.unread_count > 0 && b.unread_count === 0) return -1;
+        if (a.unread_count === 0 && b.unread_count > 0) return 1;
+        const timeA = a.last_message?.created_at || a.matched_at;
+        const timeB = b.last_message?.created_at || b.matched_at;
+        return new Date(timeB) - new Date(timeA);
+      });
+
+      return json({ conversations });
+    }
+
     // GET /api/matches
     if (path[0] === 'matches') {
       const authUser = verifyAuth(request);
@@ -178,6 +231,19 @@ export async function GET(request, { params }) {
       return json({ matches: enriched });
     }
 
+    // GET /api/messages/:conversationId/read - mark messages as read (using GET for simplicity)
+    if (path[0] === 'messages' && path[1] && path[2] === 'read') {
+      const authUser = verifyAuth(request);
+      if (!authUser) return json({ error: 'Unauthorized' }, 401);
+
+      await db.collection('messages').updateMany(
+        { conversation_id: path[1], sender_id: { $ne: authUser.id } },
+        { $addToSet: { read_by: authUser.id } }
+      );
+
+      return json({ success: true });
+    }
+
     // GET /api/messages/:conversationId
     if (path[0] === 'messages' && path[1]) {
       const authUser = verifyAuth(request);
@@ -194,6 +260,7 @@ export async function GET(request, { params }) {
 
     // GET /api/problems
     if (path[0] === 'problems') {
+      const authUser = verifyAuth(request);
       const problems = await db.collection('problems').find({}).sort({ created_at: -1 }).toArray();
       const creatorIds = [...new Set(problems.map(p => p.creator_id))];
       const creators = await db.collection('users')
@@ -201,10 +268,31 @@ export async function GET(request, { params }) {
         .project({ password_hash: 0, _id: 0 })
         .toArray();
 
-      const enriched = problems.map(({ _id, ...p }) => ({
-        ...p,
-        creator: creators.find(c => c.id === p.creator_id)
-      }));
+      // Get all problem interests
+      const problemIds = problems.map(p => p.id);
+      const interests = await db.collection('problem_interests')
+        .find({ problem_id: { $in: problemIds } })
+        .toArray();
+
+      // Get interest user details
+      const interestedUserIds = [...new Set(interests.map(i => i.user_id))];
+      const interestedUsers = interestedUserIds.length > 0 
+        ? await db.collection('users').find({ id: { $in: interestedUserIds } }).project({ name: 1, id: 1, role: 1 }).toArray()
+        : [];
+
+      const enriched = problems.map(({ _id, ...p }) => {
+        const problemInterests = interests.filter(i => i.problem_id === p.id);
+        return {
+          ...p,
+          creator: creators.find(c => c.id === p.creator_id),
+          interested_users: problemInterests.map(i => ({
+            ...i,
+            user: interestedUsers.find(u => u.id === i.user_id)
+          })),
+          interest_count: problemInterests.length,
+          user_interested: authUser ? problemInterests.some(i => i.user_id === authUser.id) : false,
+        };
+      });
 
       return json({ problems: enriched });
     }
@@ -364,11 +452,19 @@ export async function POST(request, { params }) {
       const { conversation_id, message } = await request.json();
       if (!conversation_id || !message) return json({ error: 'conversation_id and message are required' }, 400);
 
+      // Verify match exists (only matched users can message)
+      const match = await db.collection('matches').findOne({
+        id: conversation_id,
+        $or: [{ user1_id: authUser.id }, { user2_id: authUser.id }]
+      });
+      if (!match) return json({ error: 'You can only message matched users' }, 403);
+
       const msg = {
         id: uuidv4(),
         conversation_id,
         sender_id: authUser.id,
         message,
+        read_by: [authUser.id],
         created_at: new Date().toISOString()
       };
       await db.collection('messages').insertOne(msg);
@@ -376,8 +472,87 @@ export async function POST(request, { params }) {
       return json({ message: cleanMsg }, 201);
     }
 
-    // POST /api/problems
-    if (path[0] === 'problems') {
+    // POST /api/problems/:id/join (express interest / join a problem)
+    if (path[0] === 'problems' && path[1] && path[2] === 'join') {
+      const authUser = verifyAuth(request);
+      if (!authUser) return json({ error: 'Unauthorized' }, 401);
+
+      const existing = await db.collection('problem_interests').findOne({
+        problem_id: path[1],
+        user_id: authUser.id
+      });
+      if (existing) return json({ error: 'Already joined this problem' }, 409);
+
+      const interest = {
+        id: uuidv4(),
+        problem_id: path[1],
+        user_id: authUser.id,
+        created_at: new Date().toISOString()
+      };
+      await db.collection('problem_interests').insertOne(interest);
+      return json({ interest: { id: interest.id } }, 201);
+    }
+
+    // POST /api/problems/:id/contact (auto-swipe like on creator to initiate connection)
+    if (path[0] === 'problems' && path[1] && path[2] === 'contact') {
+      const authUser = verifyAuth(request);
+      if (!authUser) return json({ error: 'Unauthorized' }, 401);
+
+      const problem = await db.collection('problems').findOne({ id: path[1] });
+      if (!problem) return json({ error: 'Problem not found' }, 404);
+      if (problem.creator_id === authUser.id) return json({ error: 'Cannot contact yourself' }, 400);
+
+      // Check if already matched
+      const existingMatch = await db.collection('matches').findOne({
+        $or: [
+          { user1_id: authUser.id, user2_id: problem.creator_id },
+          { user1_id: problem.creator_id, user2_id: authUser.id }
+        ]
+      });
+
+      if (existingMatch) {
+        return json({ already_matched: true, match_id: existingMatch.id });
+      }
+
+      // Auto-create a like swipe on the creator
+      const existingSwipe = await db.collection('swipes').findOne({
+        swiper_id: authUser.id,
+        target_id: problem.creator_id
+      });
+
+      if (!existingSwipe) {
+        await db.collection('swipes').insertOne({
+          id: uuidv4(),
+          swiper_id: authUser.id,
+          target_id: problem.creator_id,
+          action: 'like',
+          created_at: new Date().toISOString()
+        });
+      }
+
+      // Check for mutual match
+      const reciprocal = await db.collection('swipes').findOne({
+        swiper_id: problem.creator_id,
+        target_id: authUser.id,
+        action: 'like'
+      });
+
+      if (reciprocal) {
+        const match = {
+          id: uuidv4(),
+          user1_id: authUser.id,
+          user2_id: problem.creator_id,
+          created_at: new Date().toISOString()
+        };
+        await db.collection('matches').insertOne(match);
+        return json({ matched: true, match_id: match.id });
+      }
+
+      return json({ interest_sent: true, message: 'Connection request sent to the creator' });
+    }
+
+    // POST /api/problems (create new)
+    if (path[0] === 'problems' && !path[1]) {
       const authUser = verifyAuth(request);
       if (!authUser) return json({ error: 'Unauthorized' }, 401);
 

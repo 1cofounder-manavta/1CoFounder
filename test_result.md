@@ -171,7 +171,7 @@ backend:
     file: "app/api/[[...path]]/route.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
@@ -182,6 +182,9 @@ backend:
       - working: "NA"
         agent: "main"
         comment: "Updated to support city, country fields (in addition to location). Need to verify these new fields save correctly."
+      - working: true
+        agent: "testing"
+        comment: "✅ Profile update with city and country fields verified working. All profile fields save correctly and profile_complete flag is set properly."
 
   - task: "Discover users"
     implemented: true
@@ -282,14 +285,59 @@ metadata:
   test_sequence: 2
   run_ui: false
 
+  - task: "Conversations endpoint"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/conversations - lists all conversations with last message, unread count, sorted by activity."
+      - working: true
+        agent: "testing"
+        comment: "✅ Conversations endpoint working correctly. Lists conversations with matched users, shows correct unread counts (0 initially), includes last messages and proper sorting."
+
+  - task: "Message read tracking"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "GET /api/messages/:id/read - marks messages as read."
+      - working: true
+        agent: "testing"
+        comment: "✅ Message read tracking working correctly. Unread counts update properly (1 after Bob sent message), mark as read functionality works (count goes to 0), messages have read_by arrays."
+
+  - task: "Match-verified messaging"
+    implemented: true
+    working: true
+    file: "app/api/[[...path]]/route.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "POST /api/messages now verifies match exists before allowing messages."
+      - working: true
+        agent: "testing"
+        comment: "✅ Match-verified messaging working correctly. Successfully blocks messaging to non-matched users with 403 error and correct error message 'You can only message matched users'."
+
 test_plan:
-  current_focus:
-    - "Discover users with smart matching"
-    - "Swipe and match"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
   - agent: "main"
-    message: "Updated discover endpoint with smart matching algorithm. Now scores profiles by: 1) complementary roles (3pts), 2) overlapping interests (2pts each), 3) same/adjacent startup stage (2/1pts), 4) looking-for role match (2pts). Profiles sorted by score descending. Also redesigned Find Cofounders card UI with Skip/Interested buttons. Please test: 1) signup two users with specific profiles, 2) verify discover returns users sorted by compatibility, 3) test Interested swipe creates record in swipes table, 4) test mutual Interested creates match and unlocks messaging."
+    message: "Added: 1) GET /api/conversations - lists all conversations with last message, unread count, sorted by activity. 2) GET /api/messages/:id/read - marks messages as read. 3) POST /api/messages now verifies match exists before allowing messages. 4) POST /api/problems/:id/join - records user interest. 5) POST /api/problems/:id/contact - auto-swipes on creator to initiate connection. 6) GET /api/problems now includes interest counts and user join status. Test these new endpoints. Base URL: https://health-cofound.preview.emergentagent.com/api"
+  - agent: "testing"
+    message: "✅ COMPREHENSIVE TEST COMPLETE: All enhanced messaging and problems features tested successfully. Fixed MongoDB projection issue in problems endpoint. Key results: 1) Conversations endpoint working - shows unread counts, last messages, proper sorting. 2) Message read tracking working - unread counts update correctly, mark as read functionality works. 3) Match-verified messaging working - correctly blocks non-matched users with 403 error. 4) Problems join/contact working - users can join problems, interest counts update, contact creator sends connection requests. 5) Profile updates with city/country fields working correctly. All backend features operational."

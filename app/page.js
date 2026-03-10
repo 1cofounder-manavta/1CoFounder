@@ -120,7 +120,7 @@ function LoadingScreen() {
 function Navbar({ currentView, setView, user, onLogout }) {
   const navItems = [
     { id: 'discover', label: 'Find Cofounders', icon: Search },
-    { id: 'matches', label: 'Matches', icon: Heart },
+    { id: 'matches', label: 'Messages', icon: MessageCircle },
     { id: 'problems', label: 'Problems', icon: Lightbulb },
     { id: 'projects', label: 'Projects', icon: FolderKanban },
     { id: 'profile', label: 'Profile', icon: User },
@@ -955,115 +955,91 @@ function DiscoverView({ user, token, onChat }) {
 }
 
 // ==========================================
-// MATCHES VIEW
+// MESSAGING VIEW (Conversations + Chat)
 // ==========================================
-function MatchesView({ user, token, onChat }) {
-  const [matches, setMatches] = useState([]);
-  const [loading, setLoading] = useState(true);
+const PROBLEM_SKILLS = ['AI Engineer', 'Clinician', 'Hardware Engineer', 'Product Manager', 'Software Engineer', 'Data Scientist', 'Researcher', 'Business Operator'];
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await api.get('matches', token);
-        setMatches(res.matches || []);
-      } catch (err) {
-        console.error('Failed to load matches', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [token]);
+function formatTime(d) {
+  if (!d) return '';
+  const date = new Date(d);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
 
-  if (loading) {
-    return <div className="flex items-center justify-center min-h-[60vh]"><p className="text-muted-foreground">Loading matches...</p></div>;
-  }
-
-  return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold">Your Matches</h1>
-        <p className="text-muted-foreground">People who want to connect with you</p>
-      </div>
-
-      {matches.length === 0 ? (
-        <div className="text-center py-16">
-          <Heart className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No Matches Yet</h3>
-          <p className="text-muted-foreground">Keep swiping to find your co-founder!</p>
-        </div>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {matches.map(match => {
-            const mu = match.matched_user;
-            if (!mu) return null;
-            const gradient = getGradient(mu.name);
-            return (
-              <Card key={match.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer border-0 shadow-sm" onClick={() => onChat(match)}>
-                <div className={`bg-gradient-to-r ${gradient} p-4`}>
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white font-bold backdrop-blur-sm">
-                      {getInitials(mu.name)}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-white">{mu.name}</h3>
-                      <p className="text-white/70 text-sm">{mu.role}</p>
-                    </div>
-                  </div>
-                </div>
-                <CardContent className="p-4">
-                  {(mu.city || mu.country) && (
-                    <p className="text-xs text-muted-foreground flex items-center gap-1 mb-2">
-                      <MapPin className="h-3 w-3" />{[mu.city, mu.country].filter(Boolean).join(', ')}
-                    </p>
-                  )}
-                  {mu.bio && <p className="text-sm text-foreground line-clamp-2 mb-3">{mu.bio}</p>}
-                  <div className="flex items-center justify-between">
-                    <div className="flex gap-1">
-                      {(mu.skills || []).slice(0, 2).map(s => (
-                        <Badge key={s} variant="secondary" className="text-xs">{s}</Badge>
-                      ))}
-                    </div>
-                    <Button size="sm" variant="ghost" className="text-teal-600 hover:text-teal-700 hover:bg-teal-50">
-                      <MessageCircle className="h-4 w-4 mr-1" /> Chat
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
+  if (diffMins < 1) return 'now';
+  if (diffMins < 60) return `${diffMins}m`;
+  if (diffHours < 24) return `${diffHours}h`;
+  if (diffDays < 7) return `${diffDays}d`;
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-// ==========================================
-// CHAT VIEW
-// ==========================================
-function ChatView({ user, token, match, onBack }) {
+function formatMsgTime(d) {
+  if (!d) return '';
+  const date = new Date(d);
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const isYesterday = date.toDateString() === yesterday.toDateString();
+
+  const timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  if (isToday) return timeStr;
+  if (isYesterday) return `Yesterday ${timeStr}`;
+  return `${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ${timeStr}`;
+}
+
+function MessagingView({ user, token }) {
+  const [conversations, setConversations] = useState([]);
+  const [activeConvo, setActiveConvo] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMsg, setNewMsg] = useState('');
   const [sending, setSending] = useState(false);
+  const [loading, setLoading] = useState(true);
   const scrollRef = useRef(null);
-  const otherUser = match?.matched_user;
-  const conversationId = match?.id;
+
+  const loadConversations = useCallback(async () => {
+    try {
+      const res = await api.get('conversations', token);
+      setConversations(res.conversations || []);
+    } catch (err) {
+      console.error('Failed to load conversations', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => { loadConversations(); }, [loadConversations]);
+
+  // Poll for new conversations
+  useEffect(() => {
+    const interval = setInterval(loadConversations, 8000);
+    return () => clearInterval(interval);
+  }, [loadConversations]);
 
   const loadMessages = useCallback(async () => {
-    if (!conversationId) return;
+    if (!activeConvo) return;
     try {
-      const res = await api.get(`messages/${conversationId}`, token);
+      const res = await api.get(`messages/${activeConvo.match_id}`, token);
       setMessages(res.messages || []);
+      // Mark as read
+      await api.get(`messages/${activeConvo.match_id}/read`, token);
+      // Refresh conversation list to update unread counts
+      const convRes = await api.get('conversations', token);
+      setConversations(convRes.conversations || []);
     } catch (err) {
       console.error('Failed to load messages', err);
     }
-  }, [conversationId, token]);
+  }, [activeConvo, token]);
 
   useEffect(() => {
-    loadMessages();
-    const interval = setInterval(loadMessages, 4000);
-    return () => clearInterval(interval);
-  }, [loadMessages]);
+    if (activeConvo) {
+      loadMessages();
+      const interval = setInterval(loadMessages, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [activeConvo, loadMessages]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -1072,10 +1048,10 @@ function ChatView({ user, token, match, onBack }) {
   }, [messages]);
 
   const sendMessage = async () => {
-    if (!newMsg.trim() || sending) return;
+    if (!newMsg.trim() || sending || !activeConvo) return;
     setSending(true);
     try {
-      await api.post('messages', { conversation_id: conversationId, message: newMsg.trim() }, token);
+      await api.post('messages', { conversation_id: activeConvo.match_id, message: newMsg.trim() }, token);
       setNewMsg('');
       await loadMessages();
     } catch (err) {
@@ -1085,77 +1061,169 @@ function ChatView({ user, token, match, onBack }) {
     }
   };
 
-  return (
-    <div className="max-w-2xl mx-auto h-[calc(100vh-4rem)] flex flex-col">
-      {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b bg-white">
-        <button onClick={onBack} className="p-1 hover:bg-muted rounded-lg transition">
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <div className={`w-10 h-10 rounded-full bg-gradient-to-r ${getGradient(otherUser?.name)} flex items-center justify-center text-white text-sm font-bold`}>
-          {getInitials(otherUser?.name)}
-        </div>
-        <div>
-          <h3 className="font-semibold">{otherUser?.name}</h3>
-          <p className="text-xs text-muted-foreground">{otherUser?.role}</p>
+  const totalUnread = conversations.reduce((sum, c) => sum + (c.unread_count || 0), 0);
+
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-[60vh]"><p className="text-muted-foreground">Loading messages...</p></div>;
+  }
+
+  // Empty state
+  if (conversations.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-[70vh]">
+        <div className="text-center max-w-md px-4">
+          <MessageCircle className="h-14 w-14 text-muted-foreground/20 mx-auto mb-5" />
+          <h2 className="text-xl font-bold mb-2">No Conversations Yet</h2>
+          <p className="text-muted-foreground mb-4">Match with other healthcare innovators to start messaging. Both users must click "Interested" to unlock messaging.</p>
         </div>
       </div>
+    );
+  }
 
-      {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-muted/30">
-        {messages.length === 0 && (
-          <div className="text-center py-12">
-            <MessageCircle className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-            <p className="text-sm text-muted-foreground">Start the conversation! Say hello to {otherUser?.name}.</p>
+  return (
+    <div className="max-w-6xl mx-auto h-[calc(100vh-4rem)] flex">
+      {/* Conversation List */}
+      <div className={`w-full md:w-96 border-r flex flex-col bg-white ${activeConvo ? 'hidden md:flex' : 'flex'}`}>
+        <div className="p-4 border-b">
+          <h1 className="text-xl font-bold">Messages</h1>
+          {totalUnread > 0 && (
+            <p className="text-sm text-teal-600 font-medium">{totalUnread} unread message{totalUnread !== 1 ? 's' : ''}</p>
+          )}
+        </div>
+        <ScrollArea className="flex-1">
+          {conversations.map(convo => {
+            const mu = convo.matched_user;
+            const isActive = activeConvo?.match_id === convo.match_id;
+            const hasUnread = convo.unread_count > 0;
+            return (
+              <button
+                key={convo.match_id}
+                onClick={() => setActiveConvo(convo)}
+                className={`w-full p-4 flex items-center gap-3 hover:bg-muted/50 transition text-left border-b ${
+                  isActive ? 'bg-teal-50 border-l-2 border-l-teal-500' : ''
+                }`}
+              >
+                <div className="relative shrink-0">
+                  <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${getGradient(mu?.name)} flex items-center justify-center text-white font-bold text-sm`}>
+                    {getInitials(mu?.name)}
+                  </div>
+                  {hasUnread && (
+                    <div className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold border-2 border-white">
+                      {convo.unread_count}
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <h3 className={`text-sm truncate ${hasUnread ? 'font-bold' : 'font-medium'}`}>{mu?.name}</h3>
+                    <span className="text-[10px] text-muted-foreground shrink-0 ml-2">
+                      {formatTime(convo.last_message?.created_at || convo.matched_at)}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{mu?.role}</p>
+                  {convo.last_message ? (
+                    <p className={`text-xs truncate mt-0.5 ${hasUnread ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
+                      {convo.last_message.sender_id === user?.id ? 'You: ' : ''}
+                      {convo.last_message.message}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground/60 mt-0.5 italic">No messages yet - say hello!</p>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </ScrollArea>
+      </div>
+
+      {/* Chat Panel */}
+      <div className={`flex-1 flex flex-col bg-white ${!activeConvo ? 'hidden md:flex' : 'flex'}`}>
+        {!activeConvo ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <MessageCircle className="h-12 w-12 text-muted-foreground/20 mx-auto mb-3" />
+              <p className="text-muted-foreground">Select a conversation to start chatting</p>
+            </div>
           </div>
-        )}
-        {messages.map(msg => {
-          const isMine = msg.sender_id === user?.id;
-          return (
-            <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${
-                isMine
-                  ? 'bg-teal-600 text-white rounded-br-md'
-                  : 'bg-white text-foreground rounded-bl-md shadow-sm'
-              }`}>
-                <p>{msg.message}</p>
-                <p className={`text-[10px] mt-1 ${isMine ? 'text-teal-200' : 'text-muted-foreground'}`}>
-                  {formatDate(msg.created_at)}
-                </p>
+        ) : (
+          <>
+            {/* Chat Header */}
+            <div className="flex items-center gap-3 p-4 border-b bg-white shrink-0">
+              <button onClick={() => setActiveConvo(null)} className="md:hidden p-1 hover:bg-muted rounded-lg transition">
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              <div className={`w-10 h-10 rounded-full bg-gradient-to-r ${getGradient(activeConvo.matched_user?.name)} flex items-center justify-center text-white text-sm font-bold`}>
+                {getInitials(activeConvo.matched_user?.name)}
+              </div>
+              <div>
+                <h3 className="font-semibold">{activeConvo.matched_user?.name}</h3>
+                <p className="text-xs text-muted-foreground">{activeConvo.matched_user?.role} {activeConvo.matched_user?.city ? `· ${activeConvo.matched_user.city}` : ''}</p>
               </div>
             </div>
-          );
-        })}
-      </div>
 
-      {/* Input */}
-      <div className="p-4 border-t bg-white">
-        <div className="flex gap-2">
-          <Input
-            value={newMsg}
-            onChange={e => setNewMsg(e.target.value)}
-            placeholder="Type a message..."
-            onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-            className="flex-1"
-          />
-          <Button onClick={sendMessage} disabled={sending || !newMsg.trim()} size="icon" className="bg-teal-600 hover:bg-teal-700">
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
+            {/* Messages */}
+            <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-muted/20">
+              {messages.length === 0 && (
+                <div className="text-center py-16">
+                  <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${getGradient(activeConvo.matched_user?.name)} flex items-center justify-center text-white font-bold text-lg mx-auto mb-4`}>
+                    {getInitials(activeConvo.matched_user?.name)}
+                  </div>
+                  <h3 className="font-semibold mb-1">You matched with {activeConvo.matched_user?.name}!</h3>
+                  <p className="text-sm text-muted-foreground">Start the conversation. Introduce yourself and discuss ideas.</p>
+                </div>
+              )}
+              {messages.map(msg => {
+                const isMine = msg.sender_id === user?.id;
+                return (
+                  <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${
+                      isMine
+                        ? 'bg-teal-600 text-white rounded-br-sm'
+                        : 'bg-white text-foreground rounded-bl-sm shadow-sm border'
+                    }`}>
+                      <p className="whitespace-pre-wrap">{msg.message}</p>
+                      <p className={`text-[10px] mt-1.5 ${isMine ? 'text-teal-200' : 'text-muted-foreground'}`}>
+                        {formatMsgTime(msg.created_at)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Input */}
+            <div className="p-4 border-t bg-white shrink-0">
+              <div className="flex gap-2">
+                <Input
+                  value={newMsg}
+                  onChange={e => setNewMsg(e.target.value)}
+                  placeholder="Type a message..."
+                  onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+                  className="flex-1"
+                />
+                <Button onClick={sendMessage} disabled={sending || !newMsg.trim()} size="icon" className="bg-teal-600 hover:bg-teal-700 shrink-0">
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
 }
 
 // ==========================================
-// PROBLEMS VIEW
+// PROBLEMS VIEW (Post a Healthcare Problem)
 // ==========================================
-function ProblemsView({ user, token }) {
+function ProblemsView({ user, token, onOpenChat }) {
   const [problems, setProblems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ title: '', description: '', clinical_context: '', skills_required: [] });
   const [submitting, setSubmitting] = useState(false);
+  const [expandedId, setExpandedId] = useState(null);
+  const [actionFeedback, setActionFeedback] = useState({});
 
   useEffect(() => {
     const load = async () => {
@@ -1177,7 +1245,7 @@ function ProblemsView({ user, token }) {
     try {
       const res = await api.post('problems', form, token);
       if (res.problem) {
-        setProblems(prev => [{ ...res.problem, creator: { name: user.name, role: user.role, id: user.id } }, ...prev]);
+        setProblems(prev => [{ ...res.problem, creator: { name: user.name, role: user.role, id: user.id }, interested_users: [], interest_count: 0, user_interested: false }, ...prev]);
         setForm({ title: '', description: '', clinical_context: '', skills_required: [] });
         setShowForm(false);
       }
@@ -1188,12 +1256,46 @@ function ProblemsView({ user, token }) {
     }
   };
 
+  const handleJoin = async (problemId) => {
+    try {
+      const res = await api.post(`problems/${problemId}/join`, {}, token);
+      if (!res.error) {
+        setProblems(prev => prev.map(p => {
+          if (p.id === problemId) {
+            return { ...p, user_interested: true, interest_count: (p.interest_count || 0) + 1 };
+          }
+          return p;
+        }));
+        setActionFeedback(prev => ({ ...prev, [problemId]: 'joined' }));
+        setTimeout(() => setActionFeedback(prev => ({ ...prev, [problemId]: null })), 3000);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleContact = async (problemId) => {
+    try {
+      const res = await api.post(`problems/${problemId}/contact`, {}, token);
+      if (res.already_matched) {
+        setActionFeedback(prev => ({ ...prev, [`contact_${problemId}`]: 'already_matched' }));
+      } else if (res.matched) {
+        setActionFeedback(prev => ({ ...prev, [`contact_${problemId}`]: 'new_match' }));
+      } else if (res.interest_sent) {
+        setActionFeedback(prev => ({ ...prev, [`contact_${problemId}`]: 'interest_sent' }));
+      }
+      setTimeout(() => setActionFeedback(prev => ({ ...prev, [`contact_${problemId}`]: null })), 4000);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold">Healthcare Problems</h1>
-          <p className="text-muted-foreground">Real challenges looking for innovative solutions</p>
+          <h1 className="text-2xl font-bold">Post a Healthcare Problem</h1>
+          <p className="text-muted-foreground">Share challenges and find collaborators to solve them</p>
         </div>
         <Button onClick={() => setShowForm(!showForm)} className="bg-teal-600 hover:bg-teal-700">
           <Plus className="h-4 w-4 mr-2" />{showForm ? 'Cancel' : 'Post Problem'}
@@ -1202,25 +1304,52 @@ function ProblemsView({ user, token }) {
 
       {/* Create Form */}
       {showForm && (
-        <Card className="mb-8 border-teal-200 shadow-md">
+        <Card className="mb-8 border-teal-200 shadow-lg">
           <CardContent className="p-6 space-y-4">
-            <h3 className="font-semibold text-lg">Post a Healthcare Problem</h3>
+            <h3 className="font-semibold text-lg">Describe Your Healthcare Problem</h3>
             <div className="space-y-2">
-              <Label>Title</Label>
-              <Input value={form.title} onChange={e => setForm({...form, title: e.target.value})} placeholder="e.g., Reducing ER wait times using AI triage" />
+              <Label>Problem Title <span className="text-red-400">*</span></Label>
+              <Input value={form.title} onChange={e => setForm({...form, title: e.target.value})} placeholder="e.g., AI-powered triage system for rural emergency rooms" />
             </div>
             <div className="space-y-2">
-              <Label>Description</Label>
-              <Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="Describe the problem in detail..." rows={4} />
+              <Label>Problem Description <span className="text-red-400">*</span></Label>
+              <Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="Describe the problem in detail. What is the current state? What would a solution look like?" rows={4} />
             </div>
             <div className="space-y-2">
               <Label>Clinical Context</Label>
-              <Textarea value={form.clinical_context} onChange={e => setForm({...form, clinical_context: e.target.value})} placeholder="What is the clinical setting and impact?" rows={3} />
+              <Textarea value={form.clinical_context} onChange={e => setForm({...form, clinical_context: e.target.value})} placeholder="What is the clinical setting? Who are the affected patients? What is the impact on outcomes?" rows={3} />
             </div>
-            <TagSelector label="Skills Required" options={SKILLS} selected={form.skills_required} onChange={v => setForm({...form, skills_required: v})} max={6} />
-            <Button onClick={handleCreate} disabled={submitting} className="bg-teal-600 hover:bg-teal-700">
-              {submitting ? 'Posting...' : 'Post Problem'}
-            </Button>
+            <div className="space-y-2">
+              <Label>Skills Required</Label>
+              <div className="flex flex-wrap gap-2">
+                {PROBLEM_SKILLS.map(s => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => {
+                      const updated = form.skills_required.includes(s)
+                        ? form.skills_required.filter(x => x !== s)
+                        : [...form.skills_required, s];
+                      setForm({...form, skills_required: updated});
+                    }}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                      form.skills_required.includes(s)
+                        ? 'bg-teal-600 text-white border-teal-600'
+                        : 'bg-white text-foreground border-border hover:border-teal-300'
+                    }`}
+                  >
+                    {form.skills_required.includes(s) && <Check className="inline h-3 w-3 mr-1" />}
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex gap-3 pt-2">
+              <Button onClick={handleCreate} disabled={submitting || !form.title || !form.description} className="bg-teal-600 hover:bg-teal-700">
+                {submitting ? 'Posting...' : 'Post Problem'}
+              </Button>
+              <Button variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -1229,41 +1358,143 @@ function ProblemsView({ user, token }) {
         <div className="text-center py-12"><p className="text-muted-foreground">Loading problems...</p></div>
       ) : problems.length === 0 ? (
         <div className="text-center py-16">
-          <Lightbulb className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+          <Lightbulb className="h-14 w-14 text-muted-foreground/20 mx-auto mb-5" />
           <h3 className="text-lg font-semibold mb-2">No Problems Posted Yet</h3>
-          <p className="text-muted-foreground">Be the first to post a healthcare challenge!</p>
+          <p className="text-muted-foreground">Be the first to share a healthcare challenge and find collaborators!</p>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {problems.map(p => (
-            <Card key={p.id} className="hover:shadow-md transition-shadow border-0 shadow-sm">
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <h3 className="font-semibold text-base leading-tight flex-1">{p.title}</h3>
-                  <Badge variant="outline" className="text-xs ml-2 shrink-0">{formatDate(p.created_at)}</Badge>
-                </div>
-                <p className="text-sm text-muted-foreground line-clamp-3 mb-3">{p.description}</p>
-                {p.clinical_context && (
-                  <p className="text-xs text-muted-foreground bg-muted p-2 rounded mb-3 line-clamp-2">
-                    <Stethoscope className="h-3 w-3 inline mr-1" />{p.clinical_context}
-                  </p>
-                )}
-                {p.skills_required?.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mb-3">
-                    {p.skills_required.map(s => (
-                      <Badge key={s} variant="secondary" className="text-xs">{s}</Badge>
-                    ))}
+        <div className="space-y-4">
+          {problems.map(p => {
+            const isExpanded = expandedId === p.id;
+            const isCreator = p.creator_id === user?.id;
+            const feedback = actionFeedback[p.id];
+            const contactFeedback = actionFeedback[`contact_${p.id}`];
+
+            return (
+              <Card key={p.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+                <CardContent className="p-6">
+                  {/* Header */}
+                  <div className="flex items-start gap-4">
+                    <div className={`w-10 h-10 rounded-lg ${getAvatarColor(p.creator?.name)} flex items-center justify-center text-white text-sm font-bold shrink-0`}>
+                      {getInitials(p.creator?.name)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <h3 className="font-semibold text-base leading-tight">{p.title}</h3>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {p.creator?.name} · {p.creator?.role} · {formatTime(p.created_at)}
+                          </p>
+                        </div>
+                        {p.interest_count > 0 && (
+                          <Badge variant="secondary" className="text-xs shrink-0">
+                            <Users className="h-3 w-3 mr-1" />{p.interest_count} interested
+                          </Badge>
+                        )}
+                      </div>
+
+                      {/* Description */}
+                      <p className={`text-sm text-foreground mt-3 leading-relaxed ${!isExpanded ? 'line-clamp-3' : ''}`}>
+                        {p.description}
+                      </p>
+
+                      {/* Clinical Context (expanded) */}
+                      {isExpanded && p.clinical_context && (
+                        <div className="mt-3 bg-teal-50 border border-teal-100 rounded-lg p-3">
+                          <p className="text-xs font-medium text-teal-800 mb-1 flex items-center gap-1">
+                            <Stethoscope className="h-3.5 w-3.5" /> Clinical Context
+                          </p>
+                          <p className="text-sm text-teal-700">{p.clinical_context}</p>
+                        </div>
+                      )}
+
+                      {/* Skills Required */}
+                      {p.skills_required?.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-3">
+                          {p.skills_required.map(s => (
+                            <Badge key={s} variant="outline" className="text-xs">{s}</Badge>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Interested Users (expanded) */}
+                      {isExpanded && p.interested_users?.length > 0 && (
+                        <div className="mt-3 pt-3 border-t">
+                          <p className="text-xs font-medium text-muted-foreground mb-2">People interested:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {p.interested_users.map((iu, idx) => (
+                              <div key={idx} className="flex items-center gap-1.5 bg-muted px-2 py-1 rounded-full">
+                                <div className={`w-5 h-5 rounded-full ${getAvatarColor(iu.user?.name)} flex items-center justify-center text-white text-[8px] font-bold`}>
+                                  {getInitials(iu.user?.name)}
+                                </div>
+                                <span className="text-xs">{iu.user?.name}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 mt-4 pt-3 border-t">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setExpandedId(isExpanded ? null : p.id)}
+                          className="text-xs text-muted-foreground hover:text-foreground"
+                        >
+                          <Eye className="h-3.5 w-3.5 mr-1" />
+                          {isExpanded ? 'Show Less' : 'View Details'}
+                        </Button>
+
+                        {!isCreator && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant={p.user_interested ? "secondary" : "outline"}
+                              onClick={() => !p.user_interested && handleJoin(p.id)}
+                              disabled={p.user_interested}
+                              className="text-xs"
+                            >
+                              {p.user_interested || feedback === 'joined' ? (
+                                <><Check className="h-3.5 w-3.5 mr-1" />Joined</>
+                              ) : (
+                                <><Plus className="h-3.5 w-3.5 mr-1" />Join Project</>
+                              )}
+                            </Button>
+
+                            <Button
+                              size="sm"
+                              onClick={() => handleContact(p.id)}
+                              className="text-xs bg-teal-600 hover:bg-teal-700"
+                            >
+                              <MessageCircle className="h-3.5 w-3.5 mr-1" />
+                              Contact Creator
+                            </Button>
+                          </>
+                        )}
+                        {isCreator && (
+                          <Badge className="bg-teal-50 text-teal-700 border-teal-200 text-xs">Your Problem</Badge>
+                        )}
+                      </div>
+
+                      {/* Contact Feedback */}
+                      {contactFeedback && (
+                        <div className={`mt-2 text-xs px-3 py-2 rounded-lg ${
+                          contactFeedback === 'already_matched' ? 'bg-teal-50 text-teal-700' :
+                          contactFeedback === 'new_match' ? 'bg-green-50 text-green-700' :
+                          'bg-blue-50 text-blue-700'
+                        }`}>
+                          {contactFeedback === 'already_matched' && '✅ You are already matched! Go to Messages to chat.'}
+                          {contactFeedback === 'new_match' && '🎉 It\'s a match! You can now message the creator.'}
+                          {contactFeedback === 'interest_sent' && '📩 Connection request sent! The creator will see your interest.'}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
-                <div className="flex items-center gap-2 pt-2 border-t">
-                  <div className={`w-6 h-6 rounded-full ${getAvatarColor(p.creator?.name)} flex items-center justify-center text-white text-[10px] font-bold`}>
-                    {getInitials(p.creator?.name)}
-                  </div>
-                  <span className="text-xs text-muted-foreground">{p.creator?.name} · {p.creator?.role}</span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>
@@ -1442,7 +1673,6 @@ export default function App() {
   const [currentView, setCurrentView] = useState('landing');
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const [chatMatch, setChatMatch] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -1485,8 +1715,7 @@ export default function App() {
   };
 
   const openChat = (match) => {
-    setChatMatch(match);
-    setCurrentView('chat');
+    setCurrentView('matches');
   };
 
   if (loading) return <LoadingScreen />;
@@ -1500,8 +1729,7 @@ export default function App() {
       {currentView === 'auth' && <AuthView onAuth={handleAuth} />}
       {currentView === 'profile' && <ProfileView user={user} token={token} onUpdate={handleProfileUpdate} />}
       {currentView === 'discover' && <DiscoverView user={user} token={token} onChat={openChat} />}
-      {currentView === 'matches' && <MatchesView user={user} token={token} onChat={openChat} />}
-      {currentView === 'chat' && <ChatView user={user} token={token} match={chatMatch} onBack={() => setCurrentView('matches')} />}
+      {currentView === 'matches' && <MessagingView user={user} token={token} />}
       {currentView === 'problems' && <ProblemsView user={user} token={token} />}
       {currentView === 'projects' && <ProjectsView user={user} token={token} />}
     </div>
