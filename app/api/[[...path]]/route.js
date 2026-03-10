@@ -394,7 +394,7 @@ export async function GET(request, { params }) {
     // GET /api/problems
     if (path[0] === 'problems') {
       const authUser = verifyAuth(request);
-      const problems = await db.collection('problems').find({}).sort({ created_at: -1 }).toArray();
+      const problems = await db.collection('problems').find({}).sort({ created_at: -1 }).limit(100).toArray();
       const creatorIds = [...new Set(problems.map(p => p.creator_id))];
       const creators = await db.collection('users')
         .find({ id: { $in: creatorIds } })
@@ -432,7 +432,7 @@ export async function GET(request, { params }) {
 
     // GET /api/projects
     if (path[0] === 'projects') {
-      const projects = await db.collection('projects').find({}).sort({ created_at: -1 }).toArray();
+      const projects = await db.collection('projects').find({}).sort({ created_at: -1 }).limit(100).toArray();
       const projectIds = projects.map(p => p.id);
       const members = await db.collection('project_members').find({ project_id: { $in: projectIds } }).toArray();
       const memberUserIds = [...new Set(members.map(m => m.user_id))];
