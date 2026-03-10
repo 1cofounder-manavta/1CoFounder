@@ -163,9 +163,9 @@ function Navbar({ currentView, setView, user, onLogout }) {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 glass border-b border-white/40 shadow-sm">
+    <nav className="sticky top-0 z-50 glass border-b border-white/40 shadow-sm" data-testid="main-navbar">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        <button onClick={() => setView('discover')} className="flex items-center gap-2.5 hover:opacity-80 transition-all duration-200">
+        <button data-testid="nav-logo" onClick={() => setView('discover')} className="flex items-center gap-2.5 hover:opacity-80 transition-all duration-200">
           <div className="w-8 h-8 rounded-xl btn-gradient flex items-center justify-center">
             <Stethoscope className="h-4 w-4 text-white" />
           </div>
@@ -178,6 +178,7 @@ function Navbar({ currentView, setView, user, onLogout }) {
             return (
               <button
                 key={item.id}
+                data-testid={`nav-${item.id}`}
                 onClick={() => setView(item.id)}
                 className={`relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
                   isActive
@@ -191,7 +192,7 @@ function Navbar({ currentView, setView, user, onLogout }) {
             );
           })}
           <div className="w-px h-6 bg-slate-200 mx-2" />
-          <button onClick={onLogout} className="p-2 text-slate-400 hover:text-red-500 transition-all duration-200 rounded-xl hover:bg-red-50">
+          <button data-testid="nav-logout" onClick={onLogout} className="p-2 text-slate-400 hover:text-red-500 transition-all duration-200 rounded-xl hover:bg-red-50">
             <LogOut className="h-4 w-4" />
           </button>
         </div>
@@ -220,7 +221,7 @@ function LandingView({ onGetStarted }) {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50" data-testid="landing-page">
       {/* Hero Section */}
       <div className="relative overflow-hidden" style={{background: 'linear-gradient(135deg, #0f766e 0%, #0d6b63 40%, #14b8a6 100%)'}}>
         <div className="absolute inset-0 health-pattern" />
@@ -238,7 +239,7 @@ function LandingView({ onGetStarted }) {
             </div>
             <span className="text-xl font-bold text-white">1CoFounder</span>
           </div>
-          <Button onClick={onGetStarted} className="bg-white text-teal-700 hover:bg-white/90 rounded-xl font-semibold shadow-lg shadow-black/10">
+          <Button data-testid="landing-get-started-btn" onClick={onGetStarted} className="bg-white text-teal-700 hover:bg-white/90 rounded-xl font-semibold shadow-lg shadow-black/10">
             Get Started
           </Button>
         </nav>
@@ -259,10 +260,10 @@ function LandingView({ onGetStarted }) {
                 Where doctors, engineers, and researchers come together to build the future of healthcare.
               </p>
               <div className="flex flex-wrap gap-3">
-                <button onClick={onGetStarted} className="btn-gradient text-white font-semibold px-8 py-3.5 rounded-2xl text-base flex items-center gap-2 shadow-xl shadow-teal-900/30">
+                <button data-testid="hero-start-matching-btn" onClick={onGetStarted} className="btn-gradient text-white font-semibold px-8 py-3.5 rounded-2xl text-base flex items-center gap-2 shadow-xl shadow-teal-900/30">
                   Start Matching <ChevronRight className="h-4 w-4" />
                 </button>
-                <button onClick={onGetStarted} className="bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold px-8 py-3.5 rounded-2xl text-base hover:bg-white/20 transition-all duration-300">
+                <button data-testid="hero-explore-problems-btn" onClick={onGetStarted} className="bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold px-8 py-3.5 rounded-2xl text-base hover:bg-white/20 transition-all duration-300">
                   Explore Problems
                 </button>
               </div>
@@ -400,7 +401,7 @@ function AuthView({ onAuth }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4" data-testid="auth-page">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2.5 mb-3">
@@ -430,7 +431,7 @@ function AuthView({ onAuth }) {
                   <Input id="login-password" name="password" type="password" placeholder="Your password" required className="rounded-xl h-11" />
                 </div>
                 {error && <p className="text-sm text-red-500 bg-red-50 p-2 rounded-xl">{error}</p>}
-                <button type="submit" disabled={loading} className="w-full btn-gradient text-white font-semibold py-3 rounded-xl disabled:opacity-50 transition-all">
+                <button type="submit" data-testid="login-submit-btn" disabled={loading} className="w-full btn-gradient text-white font-semibold py-3 rounded-xl disabled:opacity-50 transition-all">
                   {loading ? 'Signing in...' : 'Sign In'}
                 </button>
               </form>
@@ -461,7 +462,7 @@ function AuthView({ onAuth }) {
                   <Input id="signup-password" name="password" type="password" placeholder="Min 6 characters" required minLength={6} className="rounded-xl h-11" />
                 </div>
                 {error && <p className="text-sm text-red-500 bg-red-50 p-2 rounded-xl">{error}</p>}
-                <button type="submit" disabled={loading} className="w-full btn-gradient text-white font-semibold py-3 rounded-xl disabled:opacity-50 transition-all">
+                <button type="submit" data-testid="signup-submit-btn" disabled={loading} className="w-full btn-gradient text-white font-semibold py-3 rounded-xl disabled:opacity-50 transition-all">
                   {loading ? 'Creating account...' : 'Create Account'}
                 </button>
               </form>
@@ -510,9 +511,100 @@ function TagSelector({ label, options, selected, onChange, max }) {
 }
 
 // ==========================================
-// PROFILE VIEW (ONBOARDING)
+// PROFILE VIEW (ONBOARDING + SUMMARY)
 // ==========================================
+function ProfileSummary({ user, onEdit }) {
+  const gradient = getGradient(user?.name);
+  const locationStr = [user?.city, user?.country].filter(Boolean).join(', ');
+
+  return (
+    <div className="max-w-3xl mx-auto px-4 py-8" data-testid="profile-summary">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-extrabold text-slate-900">Your Profile</h1>
+        <button data-testid="edit-profile-btn" onClick={onEdit} className="btn-gradient text-white font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 text-sm">
+          <User className="h-4 w-4" /> Edit Profile
+        </button>
+      </div>
+
+      <Card className="shadow-xl shadow-slate-200/50 border-0 rounded-2xl overflow-hidden">
+        <div className={`bg-gradient-to-br ${gradient} px-6 pt-8 pb-6`}>
+          <div className="flex items-center gap-5">
+            <div className="w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-2xl font-bold text-white border-2 border-white/30 shadow-xl" data-testid="profile-avatar">
+              {getInitials(user?.name)}
+            </div>
+            <div>
+              <h2 className="text-2xl font-extrabold text-white" data-testid="profile-name">{user?.name}</h2>
+              {user?.role && <Badge className="mt-1.5 bg-white/20 text-white border-0 text-xs font-medium backdrop-blur-sm rounded-lg">{user.role}</Badge>}
+              {locationStr && <p className="mt-2 text-white/80 text-sm flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" />{locationStr}</p>}
+            </div>
+          </div>
+        </div>
+
+        <CardContent className="p-6 space-y-5">
+          {user?.bio && (
+            <div>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">About</p>
+              <p className="text-sm text-slate-700 leading-relaxed" data-testid="profile-bio">{user.bio}</p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            {user?.startup_stage && (
+              <div>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Stage</p>
+                <Badge className="text-xs font-medium rounded-lg bg-teal-50 text-teal-700 border-teal-200"><Zap className="h-3 w-3 mr-1" />{user.startup_stage}</Badge>
+              </div>
+            )}
+            {user?.commitment_level && (
+              <div>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Commitment</p>
+                <Badge className="text-xs font-medium rounded-lg bg-slate-100 text-slate-600 border-slate-200"><Clock className="h-3 w-3 mr-1" />{user.commitment_level}</Badge>
+              </div>
+            )}
+          </div>
+
+          {user?.skills?.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Skills</p>
+              <div className="flex flex-wrap gap-2" data-testid="profile-skills">
+                {user.skills.map(s => (
+                  <div key={s} className={`flex items-center gap-1.5 ${getTagColor(s)} border rounded-xl px-3 py-1.5 text-xs font-medium`}>
+                    <Check className="h-3 w-3" />{s}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {user?.interests?.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Healthcare Interests</p>
+              <div className="flex flex-wrap gap-1.5" data-testid="profile-interests">
+                {user.interests.map(i => (
+                  <Badge key={i} className={`text-xs font-normal rounded-lg border ${getTagColor(i)}`}>{i}</Badge>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {user?.looking_for?.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Looking For</p>
+              <div className="flex flex-wrap gap-1.5" data-testid="profile-looking-for">
+                {user.looking_for.map(l => (
+                  <Badge key={l} className={`text-xs font-normal rounded-lg border ${getTagColor(l)}`}>{l}</Badge>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 function ProfileView({ user, token, onUpdate }) {
+  const [editing, setEditing] = useState(!user?.profile_complete);
   const [form, setForm] = useState({
     name: user?.name || '',
     role: user?.role || '',
@@ -532,7 +624,6 @@ function ProfileView({ user, token, onUpdate }) {
   const updateField = (key, value) => setForm(prev => ({ ...prev, [key]: value }));
 
   const canProceedStep1 = form.name && form.role;
-  const canProceedStep2 = form.skills.length > 0 && form.interests.length > 0;
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -543,6 +634,8 @@ function ProfileView({ user, token, onUpdate }) {
         setError(res.error);
       } else {
         onUpdate(res.user);
+        setEditing(false);
+        setStep(1);
       }
     } catch {
       setError('Failed to save profile');
@@ -551,11 +644,15 @@ function ProfileView({ user, token, onUpdate }) {
     }
   };
 
+  if (!editing && user?.profile_complete) {
+    return <ProfileSummary user={user} onEdit={() => setEditing(true)} />;
+  }
+
   const totalSteps = 4;
   const progress = (step / totalSteps) * 100;
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8 px-4">
+    <div className="min-h-screen bg-slate-50 py-8 px-4" data-testid="profile-onboarding">
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2.5 mb-3">
@@ -564,7 +661,7 @@ function ProfileView({ user, token, onUpdate }) {
             </div>
             <span className="text-xl font-bold text-gradient">1CoFounder</span>
           </div>
-          <h1 className="text-2xl font-extrabold text-slate-900 mb-2">Build Your Profile</h1>
+          <h1 className="text-2xl font-extrabold text-slate-900 mb-2">{user?.profile_complete ? 'Edit Your Profile' : 'Build Your Profile'}</h1>
           <p className="text-slate-500">Tell the community who you are and what you're building</p>
           <div className="mt-5 w-full bg-slate-200 rounded-full h-2 max-w-md mx-auto overflow-hidden">
             <div className="btn-gradient h-2 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
@@ -574,7 +671,6 @@ function ProfileView({ user, token, onUpdate }) {
 
         <Card className="shadow-xl shadow-slate-200/50 border-0 rounded-2xl">
           <CardContent className="p-6 sm:p-8">
-            {/* Step 1: Basic Info */}
             {step === 1 && (
               <div className="space-y-5 animate-fade-in-up">
                 <div>
@@ -583,12 +679,12 @@ function ProfileView({ user, token, onUpdate }) {
                 </div>
                 <div className="space-y-2">
                   <Label className="text-slate-700">Full Name <span className="text-red-400">*</span></Label>
-                  <Input value={form.name} onChange={e => updateField('name', e.target.value)} placeholder="e.g. Dr. Sarah Chen" className="rounded-xl h-11" />
+                  <Input data-testid="profile-name-input" value={form.name} onChange={e => updateField('name', e.target.value)} placeholder="e.g. Dr. Sarah Chen" className="rounded-xl h-11" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-slate-700">Your Role <span className="text-red-400">*</span></Label>
                   <Select value={form.role} onValueChange={v => updateField('role', v)}>
-                    <SelectTrigger className="w-full rounded-xl h-11">
+                    <SelectTrigger data-testid="profile-role-select" className="w-full rounded-xl h-11">
                       <SelectValue placeholder="Select your role" />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl">
@@ -601,11 +697,11 @@ function ProfileView({ user, token, onUpdate }) {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-slate-700">City</Label>
-                    <Input value={form.city} onChange={e => updateField('city', e.target.value)} placeholder="e.g. Mumbai" className="rounded-xl h-11" />
+                    <Input data-testid="profile-city-input" value={form.city} onChange={e => updateField('city', e.target.value)} placeholder="e.g. Mumbai" className="rounded-xl h-11" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-slate-700">Country</Label>
-                    <Input value={form.country} onChange={e => updateField('country', e.target.value)} placeholder="e.g. India" className="rounded-xl h-11" />
+                    <Input data-testid="profile-country-input" value={form.country} onChange={e => updateField('country', e.target.value)} placeholder="e.g. India" className="rounded-xl h-11" />
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -616,6 +712,7 @@ function ProfileView({ user, token, onUpdate }) {
                     </span>
                   </div>
                   <Textarea
+                    data-testid="profile-bio-input"
                     value={form.bio}
                     onChange={e => { if (e.target.value.length <= 300) updateField('bio', e.target.value); }}
                     placeholder="Tell potential co-founders about yourself, your background, and what drives you..."
@@ -626,7 +723,6 @@ function ProfileView({ user, token, onUpdate }) {
               </div>
             )}
 
-            {/* Step 2: Skills & Interests */}
             {step === 2 && (
               <div className="space-y-6 animate-fade-in-up">
                 <div>
@@ -639,7 +735,6 @@ function ProfileView({ user, token, onUpdate }) {
               </div>
             )}
 
-            {/* Step 3: Startup Preferences */}
             {step === 3 && (
               <div className="space-y-6 animate-fade-in-up">
                 <div>
@@ -653,6 +748,7 @@ function ProfileView({ user, token, onUpdate }) {
                       <button
                         key={s}
                         type="button"
+                        data-testid={`stage-${s.toLowerCase().replace(/\s+/g, '-')}`}
                         onClick={() => updateField('startup_stage', s)}
                         className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-all duration-200 ${
                           form.startup_stage === s
@@ -672,6 +768,7 @@ function ProfileView({ user, token, onUpdate }) {
                       <button
                         key={c}
                         type="button"
+                        data-testid={`commitment-${c.toLowerCase().replace(/\s+/g, '-')}`}
                         onClick={() => updateField('commitment_level', c)}
                         className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-all duration-200 ${
                           form.commitment_level === c
@@ -687,7 +784,6 @@ function ProfileView({ user, token, onUpdate }) {
               </div>
             )}
 
-            {/* Step 4: Looking For */}
             {step === 4 && (
               <div className="space-y-6 animate-fade-in-up">
                 <div>
@@ -705,14 +801,17 @@ function ProfileView({ user, token, onUpdate }) {
               </div>
             )}
 
-            {error && <p className="text-sm text-red-500 mt-4 bg-red-50 p-2 rounded-xl">{error}</p>}
+            {error && <p data-testid="profile-error" className="text-sm text-red-500 mt-4 bg-red-50 p-2 rounded-xl">{error}</p>}
 
             <div className="flex justify-between mt-8">
               {step > 1 ? (
-                <Button variant="outline" onClick={() => setStep(s => s - 1)} className="rounded-xl">Back</Button>
+                <Button data-testid="profile-back-btn" variant="outline" onClick={() => setStep(s => s - 1)} className="rounded-xl">Back</Button>
+              ) : user?.profile_complete ? (
+                <Button data-testid="profile-cancel-btn" variant="outline" onClick={() => setEditing(false)} className="rounded-xl">Cancel</Button>
               ) : <div />}
               {step < totalSteps ? (
                 <button
+                  data-testid="profile-continue-btn"
                   onClick={() => setStep(s => s + 1)}
                   className="btn-gradient text-white font-semibold px-6 py-2.5 rounded-xl disabled:opacity-50 flex items-center gap-1"
                   disabled={step === 1 && !canProceedStep1}
@@ -720,8 +819,8 @@ function ProfileView({ user, token, onUpdate }) {
                   Continue <ChevronRight className="h-4 w-4" />
                 </button>
               ) : (
-                <button onClick={handleSubmit} disabled={loading} className="btn-gradient text-white font-semibold px-6 py-2.5 rounded-xl disabled:opacity-50">
-                  {loading ? 'Saving...' : 'Complete Profile & Start Matching'}
+                <button data-testid="profile-submit-btn" onClick={handleSubmit} disabled={loading} className="btn-gradient text-white font-semibold px-6 py-2.5 rounded-xl disabled:opacity-50">
+                  {loading ? 'Saving...' : user?.profile_complete ? 'Save Changes' : 'Complete Profile & Start Matching'}
                 </button>
               )}
             </div>
@@ -828,7 +927,7 @@ function DiscoverView({ user, token, onChat }) {
   const stageColor = stageColors[currentProfile.startup_stage] || 'bg-slate-100 text-slate-600';
 
   return (
-    <div className="max-w-xl mx-auto px-4 py-6">
+    <div className="max-w-xl mx-auto px-4 py-6" data-testid="discover-page">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-900">Find Cofounders</h1>
@@ -937,12 +1036,14 @@ function DiscoverView({ user, token, onChat }) {
               <Button
                 variant="outline"
                 size="lg"
+                data-testid="swipe-skip-btn"
                 onClick={() => handleSwipe('pass')}
                 className="h-13 text-base font-semibold border-2 border-slate-200 hover:bg-slate-50 hover:border-slate-300 rounded-2xl transition-all duration-200 active:scale-95"
               >
                 <X className="h-5 w-5 mr-2 text-slate-400" />Skip
               </Button>
               <button
+                data-testid="swipe-interested-btn"
                 onClick={() => handleSwipe('like')}
                 className="h-13 text-base font-semibold btn-gradient text-white rounded-2xl transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 py-3"
               >
@@ -1185,8 +1286,8 @@ function MessagingView({ user, token }) {
 
             <div className="p-4 border-t border-slate-100 bg-white shrink-0">
               <div className="flex gap-2">
-                <Input value={newMsg} onChange={e => setNewMsg(e.target.value)} placeholder="Type a message..." onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()} className="flex-1 rounded-xl h-11" />
-                <button onClick={sendMessage} disabled={sending || !newMsg.trim()} className="btn-gradient text-white p-3 rounded-xl disabled:opacity-40 transition-all shrink-0"><Send className="h-4 w-4" /></button>
+                <Input data-testid="message-input" value={newMsg} onChange={e => setNewMsg(e.target.value)} placeholder="Type a message..." onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()} className="flex-1 rounded-xl h-11" />
+                <button data-testid="message-send-btn" onClick={sendMessage} disabled={sending || !newMsg.trim()} className="btn-gradient text-white p-3 rounded-xl disabled:opacity-40 transition-all shrink-0"><Send className="h-4 w-4" /></button>
               </div>
             </div>
           </>
@@ -1241,13 +1342,13 @@ function ProblemsView({ user, token, onOpenChat }) {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8" data-testid="problems-page">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-900">Post a Healthcare Problem</h1>
           <p className="text-slate-500">Share challenges and find collaborators</p>
         </div>
-        <button onClick={() => setShowForm(!showForm)} className="btn-gradient text-white font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 text-sm">
+        <button data-testid="post-problem-btn" onClick={() => setShowForm(!showForm)} className="btn-gradient text-white font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 text-sm">
           <Plus className="h-4 w-4" />{showForm ? 'Cancel' : 'Post Problem'}
         </button>
       </div>
@@ -1405,13 +1506,13 @@ function ProjectsView({ user, token }) {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8" data-testid="projects-page">
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-900">Healthcare Projects</h1>
           <p className="text-slate-500">Join or create projects to build solutions</p>
         </div>
-        <button onClick={() => setShowForm(!showForm)} className="btn-gradient text-white font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 text-sm">
+        <button data-testid="new-project-btn" onClick={() => setShowForm(!showForm)} className="btn-gradient text-white font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 text-sm">
           <Plus className="h-4 w-4" />{showForm ? 'Cancel' : 'New Project'}
         </button>
       </div>
@@ -1553,7 +1654,7 @@ export default function App() {
 
   const handleProfileUpdate = (updatedUser) => {
     setUser(updatedUser);
-    setCurrentView('discover');
+    if (!user?.profile_complete) setCurrentView('discover');
   };
 
   const openChat = (match) => {
