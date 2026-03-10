@@ -2,7 +2,7 @@ import requests
 import json
 
 # Test the profile update functionality with city and country fields
-BASE_URL = "https://health-cofound.preview.emergentagent.com/api"
+BASE_URL = "https://medical-match-1.preview.emergentagent.com/api"
 
 def test_profile_update():
     print("=== Testing Profile Update with City and Country Fields ===\n")

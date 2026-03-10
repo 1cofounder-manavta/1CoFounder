@@ -16,7 +16,8 @@ import {
   User, LogOut, Send, ArrowLeft, Plus, MapPin,
   Briefcase, Stethoscope, ChevronRight,
   Sparkles, Shield, Globe, Zap, Search, Check,
-  Handshake, Target, Clock, Eye
+  Handshake, Target, Clock, Eye, BadgeCheck, Brain,
+  Activity, BarChart3, Rocket
 } from 'lucide-react';
 
 // ==========================================
@@ -31,17 +32,50 @@ const LOOKING_FOR = ['Clinician', 'AI Engineer', 'Software Engineer', 'Hardware 
 
 const AVATAR_COLORS = ['bg-teal-500', 'bg-cyan-600', 'bg-emerald-500', 'bg-violet-500', 'bg-rose-500', 'bg-amber-500', 'bg-blue-500', 'bg-indigo-500'];
 const AVATAR_GRADIENT = [
-  'from-teal-500 to-cyan-500',
-  'from-violet-500 to-purple-500',
-  'from-rose-500 to-pink-500',
-  'from-amber-500 to-orange-500',
-  'from-blue-500 to-indigo-500',
-  'from-emerald-500 to-green-500',
-  'from-cyan-500 to-blue-500',
-  'from-pink-500 to-rose-500',
+  'from-teal-600 to-emerald-500',
+  'from-violet-600 to-purple-400',
+  'from-rose-600 to-pink-400',
+  'from-amber-600 to-orange-400',
+  'from-blue-600 to-indigo-400',
+  'from-emerald-600 to-green-400',
+  'from-cyan-600 to-blue-400',
+  'from-pink-600 to-rose-400',
 ];
 
-const HERO_IMAGE = 'https://images.unsplash.com/photo-1666886573553-6548db92db79?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTF8MHwxfHNlYXJjaHw0fHxoZWFsdGhjYXJlJTIwcHJvZmVzc2lvbmFscyUyMGNvbGxhYm9yYXRpb258ZW58MHx8fHwxNzczMTQ2MTIyfDA&ixlib=rb-4.1.0&q=85';
+const HERO_IMAGE = 'https://images.unsplash.com/photo-1659353888906-adb3e0041693?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NTN8MHwxfHNlYXJjaHwxfHxJbmRpYW4lMjBkb2N0b3JzJTIwaGVhbHRoY2FyZSUyMGNvbGxhYm9yYXRpb258ZW58MHx8fHwxNzczMTUwMjkyfDA&ixlib=rb-4.1.0&q=85';
+const HERO_IMAGE_2 = 'https://images.unsplash.com/photo-1760074032600-36943c264fbf?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNTl8MHwxfHNlYXJjaHw0fHxoZWFsdGhjYXJlJTIwdGVjaG5vbG9neSUyMGNvbGxhYm9yYXRpb258ZW58MHx8fHwxNzczMTUwMjk2fDA&ixlib=rb-4.1.0&q=85';
+
+// Skill/Interest tag color mapping
+const TAG_COLORS = {
+  'AI Engineer': 'bg-purple-100 text-purple-700 border-purple-200',
+  'Clinician': 'bg-green-100 text-green-700 border-green-200',
+  'Hardware Engineer': 'bg-orange-100 text-orange-700 border-orange-200',
+  'Product Manager': 'bg-blue-100 text-blue-700 border-blue-200',
+  'Software Engineer': 'bg-cyan-100 text-cyan-700 border-cyan-200',
+  'Data Scientist': 'bg-indigo-100 text-indigo-700 border-indigo-200',
+  'Researcher': 'bg-pink-100 text-pink-700 border-pink-200',
+  'Business Operator': 'bg-amber-100 text-amber-700 border-amber-200',
+  'Cardiology': 'bg-rose-100 text-rose-700 border-rose-200',
+  'ICU Medicine': 'bg-red-100 text-red-700 border-red-200',
+  'Psychiatry': 'bg-violet-100 text-violet-700 border-violet-200',
+  'Machine Learning': 'bg-purple-100 text-purple-700 border-purple-200',
+  'AI Engineering': 'bg-indigo-100 text-indigo-700 border-indigo-200',
+  'Biomedical Engineering': 'bg-blue-100 text-blue-700 border-blue-200',
+  'Full Stack Development': 'bg-cyan-100 text-cyan-700 border-cyan-200',
+  'Product Management': 'bg-teal-100 text-teal-700 border-teal-200',
+  'Fundraising': 'bg-amber-100 text-amber-700 border-amber-200',
+  'AI Healthcare': 'bg-purple-50 text-purple-700 border-purple-200',
+  'Medical Devices': 'bg-blue-50 text-blue-700 border-blue-200',
+  'Digital Health': 'bg-cyan-50 text-cyan-700 border-cyan-200',
+  'Diagnostics': 'bg-teal-50 text-teal-700 border-teal-200',
+  'Hospital Operations': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  'Mental Health': 'bg-violet-50 text-violet-700 border-violet-200',
+  "Women's Health": 'bg-pink-50 text-pink-700 border-pink-200',
+  'Public Health': 'bg-green-50 text-green-700 border-green-200',
+  'Remote Monitoring': 'bg-indigo-50 text-indigo-700 border-indigo-200',
+};
+
+const getTagColor = (tag) => TAG_COLORS[tag] || 'bg-slate-100 text-slate-600 border-slate-200';
 
 // ==========================================
 // HELPERS
@@ -98,16 +132,18 @@ const api = {
 // ==========================================
 function LoadingScreen() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 to-cyan-50">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50">
       <div className="text-center">
-        <div className="inline-flex items-center gap-2 mb-4">
-          <Stethoscope className="h-8 w-8 text-teal-600 animate-pulse" />
-          <span className="text-2xl font-bold text-teal-700">1CoFounder</span>
+        <div className="inline-flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 rounded-2xl btn-gradient flex items-center justify-center animate-pulse-glow">
+            <Stethoscope className="h-6 w-6 text-white" />
+          </div>
+          <span className="text-2xl font-bold text-gradient">1CoFounder</span>
         </div>
-        <div className="flex gap-1 justify-center">
-          <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{animationDelay:'0ms'}} />
-          <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{animationDelay:'150ms'}} />
-          <div className="w-2 h-2 bg-teal-500 rounded-full animate-bounce" style={{animationDelay:'300ms'}} />
+        <div className="flex gap-1.5 justify-center">
+          <div className="w-2.5 h-2.5 bg-teal-500 rounded-full animate-bounce" style={{animationDelay:'0ms'}} />
+          <div className="w-2.5 h-2.5 bg-teal-400 rounded-full animate-bounce" style={{animationDelay:'150ms'}} />
+          <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-bounce" style={{animationDelay:'300ms'}} />
         </div>
       </div>
     </div>
@@ -127,13 +163,15 @@ function Navbar({ currentView, setView, user, onLogout }) {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-border">
-      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        <button onClick={() => setView('discover')} className="flex items-center gap-2 hover:opacity-80 transition">
-          <Stethoscope className="h-6 w-6 text-teal-600" />
-          <span className="text-xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent hidden sm:inline">1CoFounder</span>
+    <nav className="sticky top-0 z-50 glass border-b border-white/40 shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        <button onClick={() => setView('discover')} className="flex items-center gap-2.5 hover:opacity-80 transition-all duration-200">
+          <div className="w-8 h-8 rounded-xl btn-gradient flex items-center justify-center">
+            <Stethoscope className="h-4 w-4 text-white" />
+          </div>
+          <span className="text-lg font-bold text-gradient hidden sm:inline">1CoFounder</span>
         </button>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           {navItems.map(item => {
             const Icon = item.icon;
             const isActive = currentView === item.id;
@@ -141,10 +179,10 @@ function Navbar({ currentView, setView, user, onLogout }) {
               <button
                 key={item.id}
                 onClick={() => setView(item.id)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                className={`relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
                   isActive
-                    ? 'bg-teal-50 text-teal-700'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    ? 'bg-teal-700 text-white shadow-md shadow-teal-700/20'
+                    : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
                 }`}
               >
                 <Icon className="h-4 w-4" />
@@ -152,8 +190,8 @@ function Navbar({ currentView, setView, user, onLogout }) {
               </button>
             );
           })}
-          <Separator orientation="vertical" className="h-6 mx-2" />
-          <button onClick={onLogout} className="p-2 text-muted-foreground hover:text-red-500 transition rounded-lg hover:bg-red-50">
+          <div className="w-px h-6 bg-slate-200 mx-2" />
+          <button onClick={onLogout} className="p-2 text-slate-400 hover:text-red-500 transition-all duration-200 rounded-xl hover:bg-red-50">
             <LogOut className="h-4 w-4" />
           </button>
         </div>
@@ -167,73 +205,80 @@ function Navbar({ currentView, setView, user, onLogout }) {
 // ==========================================
 function LandingView({ onGetStarted }) {
   const features = [
-    { icon: Search, title: 'Smart Matching', desc: 'Swipe-based discovery to find your ideal healthcare co-founder based on skills, interests, and goals.' },
-    { icon: Handshake, title: 'Verified Profiles', desc: 'Connect with real healthcare professionals - doctors, engineers, researchers, and investors.' },
-    { icon: Lightbulb, title: 'Problem Board', desc: 'Post real healthcare challenges and find innovators ready to solve them together.' },
-    { icon: FolderKanban, title: 'Project Hub', desc: 'Create and join healthcare projects. Build your team from idea to impact.' },
-    { icon: MessageCircle, title: 'Direct Messaging', desc: 'Chat with your matches instantly. Discuss ideas, align visions, and start building.' },
-    { icon: Shield, title: 'Nonprofit Mission', desc: 'Free forever. We exist to accelerate healthcare innovation, not profits.' },
+    { icon: Search, title: 'Smart Matching', desc: 'AI-powered discovery to find your ideal healthcare co-founder based on complementary skills and shared interests.', color: 'from-teal-500 to-emerald-500' },
+    { icon: Handshake, title: 'Verified Profiles', desc: 'Connect with real healthcare professionals — doctors, engineers, researchers, and investors.', color: 'from-blue-500 to-indigo-500' },
+    { icon: Lightbulb, title: 'Problem Board', desc: 'Post real healthcare challenges and find innovators ready to solve them together.', color: 'from-amber-500 to-orange-500' },
+    { icon: FolderKanban, title: 'Project Hub', desc: 'Create and join healthcare projects. Build your team from idea to impact.', color: 'from-purple-500 to-violet-500' },
+    { icon: MessageCircle, title: 'Instant Messaging', desc: 'Chat with your matches instantly. Discuss ideas, align visions, and start building.', color: 'from-rose-500 to-pink-500' },
+    { icon: Shield, title: 'Nonprofit Mission', desc: 'Free forever. We exist to accelerate healthcare innovation, not profits.', color: 'from-emerald-500 to-green-500' },
   ];
 
   const steps = [
-    { num: '01', title: 'Create Your Profile', desc: 'Tell us about your skills, interests, and what kind of co-founder you are looking for.' },
-    { num: '02', title: 'Discover & Connect', desc: 'Swipe through curated profiles of healthcare innovators who complement your expertise.' },
-    { num: '03', title: 'Build Together', desc: 'Match, message, and start collaborating on healthcare solutions that matter.' },
+    { num: '01', title: 'Create Your Profile', desc: 'Tell us about your skills, interests, and what kind of co-founder you are looking for.', icon: User },
+    { num: '02', title: 'Discover & Connect', desc: 'Swipe through curated profiles of healthcare innovators who complement your expertise.', icon: Search },
+    { num: '03', title: 'Build Together', desc: 'Match, message, and start collaborating on healthcare solutions that matter.', icon: Rocket },
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-slate-50">
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-teal-600 via-teal-700 to-cyan-800">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
-          <div className="absolute bottom-10 right-20 w-96 h-96 bg-cyan-300 rounded-full blur-3xl" />
+      <div className="relative overflow-hidden" style={{background: 'linear-gradient(135deg, #0f766e 0%, #0d6b63 40%, #14b8a6 100%)'}}>
+        <div className="absolute inset-0 health-pattern" />
+        <div className="absolute inset-0">
+          <div className="absolute top-20 left-10 w-[500px] h-[500px] bg-emerald-400/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-cyan-300/10 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-teal-300/5 rounded-full blur-3xl" />
         </div>
-        <nav className="relative z-10 max-w-7xl mx-auto px-4 py-5 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <Stethoscope className="h-7 w-7 text-white" />
+
+        {/* Nav */}
+        <nav className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-5 flex justify-between items-center">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/20">
+              <Stethoscope className="h-5 w-5 text-white" />
+            </div>
             <span className="text-xl font-bold text-white">1CoFounder</span>
           </div>
-          <Button onClick={onGetStarted} variant="secondary" className="bg-white text-teal-700 hover:bg-teal-50">
+          <Button onClick={onGetStarted} className="bg-white text-teal-700 hover:bg-white/90 rounded-xl font-semibold shadow-lg shadow-black/10">
             Get Started
           </Button>
         </nav>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 py-20 md:py-32">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+
+        {/* Hero Content */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-20 md:py-28 lg:py-36">
+          <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div className="animate-fade-in-up">
-              <Badge className="mb-4 bg-teal-500/20 text-white border-teal-400/30 hover:bg-teal-500/30">
-                Nonprofit Healthcare Platform
+              <Badge className="mb-5 bg-white/10 text-white/90 border-white/20 hover:bg-white/15 backdrop-blur-sm rounded-full px-4 py-1.5">
+                <Activity className="h-3.5 w-3.5 mr-1.5" /> Nonprofit Healthcare Platform
               </Badge>
-              <h1 className="text-4xl md:text-6xl font-bold text-white leading-tight mb-6">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-[1.1] mb-6 tracking-tight">
                 Find Your<br />
-                <span className="text-cyan-300">Healthcare</span><br />
+                <span className="text-transparent bg-clip-text" style={{backgroundImage: 'linear-gradient(to right, #a7f3d0, #5eead4, #99f6e4)'}}>Healthcare</span><br />
                 Co-Founder
               </h1>
-              <p className="text-lg text-teal-100 mb-8 max-w-lg">
-                Where doctors meet engineers, researchers meet investors, and great healthcare ideas find the teams to make them real.
+              <p className="text-lg text-teal-100/90 mb-8 max-w-lg leading-relaxed">
+                Where doctors, engineers, and researchers come together to build the future of healthcare.
               </p>
-              <div className="flex gap-3">
-                <Button onClick={onGetStarted} size="lg" className="bg-white text-teal-700 hover:bg-teal-50 text-base px-8">
-                  Start Matching <ChevronRight className="ml-1 h-4 w-4" />
-                </Button>
-                <Button variant="outline" size="lg" className="border-white/30 text-white hover:bg-white/10 text-base">
-                  Learn More
-                </Button>
+              <div className="flex flex-wrap gap-3">
+                <button onClick={onGetStarted} className="btn-gradient text-white font-semibold px-8 py-3.5 rounded-2xl text-base flex items-center gap-2 shadow-xl shadow-teal-900/30">
+                  Start Matching <ChevronRight className="h-4 w-4" />
+                </button>
+                <button onClick={onGetStarted} className="bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold px-8 py-3.5 rounded-2xl text-base hover:bg-white/20 transition-all duration-300">
+                  Explore Problems
+                </button>
               </div>
-              <div className="mt-10 flex gap-8">
-                <div><div className="text-2xl font-bold text-white">1,000+</div><div className="text-sm text-teal-200">Innovators</div></div>
-                <div><div className="text-2xl font-bold text-white">500+</div><div className="text-sm text-teal-200">Matches Made</div></div>
-                <div><div className="text-2xl font-bold text-white">100+</div><div className="text-sm text-teal-200">Projects Launched</div></div>
+              <div className="mt-12 flex gap-10">
+                <div><div className="text-3xl font-extrabold text-white">1,000+</div><div className="text-sm text-teal-200/70 mt-0.5">Innovators</div></div>
+                <div><div className="text-3xl font-extrabold text-white">500+</div><div className="text-sm text-teal-200/70 mt-0.5">Matches Made</div></div>
+                <div><div className="text-3xl font-extrabold text-white">100+</div><div className="text-sm text-teal-200/70 mt-0.5">Projects</div></div>
               </div>
             </div>
             <div className="hidden md:block">
               <div className="relative">
-                <div className="absolute -inset-4 bg-gradient-to-r from-cyan-400/20 to-teal-400/20 rounded-2xl blur-xl" />
-                <img
-                  src={HERO_IMAGE}
-                  alt="Healthcare professionals collaborating"
-                  className="relative rounded-2xl shadow-2xl w-full h-[400px] object-cover"
-                />
+                <div className="absolute -inset-6 bg-gradient-to-br from-emerald-400/20 to-teal-400/20 rounded-3xl blur-2xl" />
+                <div className="relative grid grid-cols-2 gap-4">
+                  <img src={HERO_IMAGE} alt="Indian healthcare professional" className="rounded-3xl shadow-2xl w-full h-[260px] object-cover border-2 border-white/10" />
+                  <img src={HERO_IMAGE_2} alt="Healthcare collaboration" className="rounded-3xl shadow-2xl w-full h-[260px] object-cover mt-8 border-2 border-white/10" />
+                </div>
               </div>
             </div>
           </div>
@@ -241,43 +286,47 @@ function LandingView({ onGetStarted }) {
       </div>
 
       {/* How It Works */}
-      <div className="max-w-7xl mx-auto px-4 py-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-24">
         <div className="text-center mb-16">
-          <Badge variant="outline" className="mb-3 text-teal-600 border-teal-200">How It Works</Badge>
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Three Steps to Your Co-Founder</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">Our platform makes it easy to find and connect with the right people for your healthcare venture.</p>
+          <Badge variant="outline" className="mb-4 text-teal-700 border-teal-200 bg-teal-50 rounded-full px-4 py-1">How It Works</Badge>
+          <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4 tracking-tight">Three Steps to Your Co-Founder</h2>
+          <p className="text-slate-500 max-w-2xl mx-auto text-lg">Our platform makes it easy to find and connect with the right people.</p>
         </div>
         <div className="grid md:grid-cols-3 gap-8">
-          {steps.map((step, i) => (
-            <div key={i} className="relative group">
-              <div className="text-6xl font-bold text-teal-100 mb-4 group-hover:text-teal-200 transition">{step.num}</div>
-              <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
-              <p className="text-muted-foreground">{step.desc}</p>
-            </div>
-          ))}
+          {steps.map((step, i) => {
+            const Icon = step.icon;
+            return (
+              <div key={i} className="relative group text-center">
+                <div className="w-16 h-16 rounded-2xl btn-gradient flex items-center justify-center mx-auto mb-5 shadow-lg shadow-teal-600/20 group-hover:shadow-xl group-hover:shadow-teal-600/30 transition-all duration-300 group-hover:-translate-y-1">
+                  <Icon className="h-7 w-7 text-white" />
+                </div>
+                <div className="text-xs font-bold text-teal-500 tracking-widest mb-2">STEP {step.num}</div>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">{step.title}</h3>
+                <p className="text-slate-500 leading-relaxed">{step.desc}</p>
+              </div>
+            );
+          })}
         </div>
       </div>
 
       {/* Features */}
-      <div className="bg-gradient-to-b from-teal-50/50 to-white py-20">
-        <div className="max-w-7xl mx-auto px-4">
+      <div className="bg-white py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-16">
-            <Badge variant="outline" className="mb-3 text-teal-600 border-teal-200">Features</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Everything You Need to Build</h2>
+            <Badge variant="outline" className="mb-4 text-teal-700 border-teal-200 bg-teal-50 rounded-full px-4 py-1">Features</Badge>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4 tracking-tight">Everything You Need to Build</h2>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {features.map((f, i) => {
               const Icon = f.icon;
               return (
-                <Card key={i} className="border-0 shadow-sm hover:shadow-md transition-shadow bg-white">
-                  <CardContent className="pt-6">
-                    <div className="w-10 h-10 rounded-lg bg-teal-100 flex items-center justify-center mb-4">
-                      <Icon className="h-5 w-5 text-teal-600" />
-                    </div>
-                    <h3 className="font-semibold mb-2">{f.title}</h3>
-                    <p className="text-sm text-muted-foreground">{f.desc}</p>
-                  </CardContent>
-                </Card>
+                <div key={i} className="card-hover bg-white border border-slate-100 rounded-2xl p-6 cursor-default">
+                  <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${f.color} flex items-center justify-center mb-4 shadow-md`}>
+                    <Icon className="h-5 w-5 text-white" />
+                  </div>
+                  <h3 className="font-bold text-slate-900 mb-2 text-base">{f.title}</h3>
+                  <p className="text-sm text-slate-500 leading-relaxed">{f.desc}</p>
+                </div>
               );
             })}
           </div>
@@ -285,23 +334,32 @@ function LandingView({ onGetStarted }) {
       </div>
 
       {/* CTA */}
-      <div className="max-w-4xl mx-auto px-4 py-20 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Find Your Co-Founder?</h2>
-        <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">Join a growing community of healthcare innovators who are building the future of medicine together.</p>
-        <Button onClick={onGetStarted} size="lg" className="bg-teal-600 hover:bg-teal-700 text-base px-10">
-          Get Started Free <ChevronRight className="ml-1 h-4 w-4" />
-        </Button>
+      <div className="py-24">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+          <div className="relative rounded-3xl overflow-hidden" style={{background: 'linear-gradient(135deg, #0f766e, #14b8a6)'}}>
+            <div className="absolute inset-0 health-pattern" />
+            <div className="relative p-12 md:p-16">
+              <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4 tracking-tight">Ready to Find Your Co-Founder?</h2>
+              <p className="text-lg text-teal-100/80 mb-8 max-w-2xl mx-auto">Join a growing community of healthcare innovators who are building the future of medicine together.</p>
+              <button onClick={onGetStarted} className="bg-white text-teal-700 font-bold px-10 py-4 rounded-2xl text-base hover:bg-white/90 transition-all duration-300 shadow-xl shadow-black/10 hover:-translate-y-0.5">
+                Get Started Free <ChevronRight className="ml-1 h-4 w-4 inline" />
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Footer */}
-      <footer className="border-t bg-muted/30">
-        <div className="max-w-7xl mx-auto px-4 py-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Stethoscope className="h-5 w-5 text-teal-600" />
-            <span className="font-semibold text-teal-700">1CoFounder</span>
-            <span className="text-sm text-muted-foreground">| A nonprofit platform</span>
+      <footer className="border-t border-slate-200 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg btn-gradient flex items-center justify-center">
+              <Stethoscope className="h-3.5 w-3.5 text-white" />
+            </div>
+            <span className="font-bold text-gradient">1CoFounder</span>
+            <span className="text-sm text-slate-400">| A nonprofit platform</span>
           </div>
-          <p className="text-sm text-muted-foreground">Accelerating healthcare innovation through collaboration.</p>
+          <p className="text-sm text-slate-400">Accelerating healthcare innovation through collaboration.</p>
         </div>
       </footer>
     </div>
@@ -342,46 +400,48 @@ function AuthView({ onAuth }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-teal-50 via-white to-cyan-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-2">
-            <Stethoscope className="h-7 w-7 text-teal-600" />
-            <span className="text-2xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">1CoFounder</span>
+          <div className="inline-flex items-center gap-2.5 mb-3">
+            <div className="w-10 h-10 rounded-2xl btn-gradient flex items-center justify-center shadow-lg shadow-teal-600/20">
+              <Stethoscope className="h-5 w-5 text-white" />
+            </div>
+            <span className="text-2xl font-bold text-gradient">1CoFounder</span>
           </div>
-          <p className="text-muted-foreground">Find your healthcare co-founder</p>
+          <p className="text-slate-500">Find your healthcare co-founder</p>
         </div>
 
-        <Card className="shadow-lg border-0">
+        <Card className="shadow-xl shadow-slate-200/50 border-0 rounded-2xl overflow-hidden">
           <Tabs defaultValue="login">
-            <TabsList className="w-full grid grid-cols-2 m-0 rounded-b-none">
-              <TabsTrigger value="login">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            <TabsList className="w-full grid grid-cols-2 m-0 rounded-b-none h-12 bg-slate-100">
+              <TabsTrigger value="login" className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm">Sign In</TabsTrigger>
+              <TabsTrigger value="signup" className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm">Sign Up</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login" className="p-6">
               <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="login-email">Email</Label>
-                  <Input id="login-email" name="email" type="email" placeholder="you@example.com" required />
+                  <Label htmlFor="login-email" className="text-slate-700">Email</Label>
+                  <Input id="login-email" name="email" type="email" placeholder="you@example.com" required className="rounded-xl h-11" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="login-password">Password</Label>
-                  <Input id="login-password" name="password" type="password" placeholder="Your password" required />
+                  <Label htmlFor="login-password" className="text-slate-700">Password</Label>
+                  <Input id="login-password" name="password" type="password" placeholder="Your password" required className="rounded-xl h-11" />
                 </div>
-                {error && <p className="text-sm text-red-500">{error}</p>}
-                <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700" disabled={loading}>
+                {error && <p className="text-sm text-red-500 bg-red-50 p-2 rounded-xl">{error}</p>}
+                <button type="submit" disabled={loading} className="w-full btn-gradient text-white font-semibold py-3 rounded-xl disabled:opacity-50 transition-all">
                   {loading ? 'Signing in...' : 'Sign In'}
-                </Button>
+                </button>
               </form>
               <div className="mt-6">
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center"><Separator /></div>
-                  <div className="relative flex justify-center text-xs"><span className="bg-white px-2 text-muted-foreground">Coming soon</span></div>
+                  <div className="relative flex justify-center text-xs"><span className="bg-white px-3 text-slate-400">Coming soon</span></div>
                 </div>
                 <div className="mt-4 grid grid-cols-2 gap-3">
-                  <Button variant="outline" disabled className="text-xs"><Globe className="mr-2 h-4 w-4" />Google</Button>
-                  <Button variant="outline" disabled className="text-xs"><Briefcase className="mr-2 h-4 w-4" />LinkedIn</Button>
+                  <Button variant="outline" disabled className="text-xs rounded-xl h-10"><Globe className="mr-2 h-4 w-4" />Google</Button>
+                  <Button variant="outline" disabled className="text-xs rounded-xl h-10"><Briefcase className="mr-2 h-4 w-4" />LinkedIn</Button>
                 </div>
               </div>
             </TabsContent>
@@ -389,21 +449,21 @@ function AuthView({ onAuth }) {
             <TabsContent value="signup" className="p-6">
               <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signup-name">Full Name</Label>
-                  <Input id="signup-name" name="name" placeholder="Dr. Jane Smith" required />
+                  <Label htmlFor="signup-name" className="text-slate-700">Full Name</Label>
+                  <Input id="signup-name" name="name" placeholder="Dr. Jane Smith" required className="rounded-xl h-11" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <Input id="signup-email" name="email" type="email" placeholder="you@example.com" required />
+                  <Label htmlFor="signup-email" className="text-slate-700">Email</Label>
+                  <Input id="signup-email" name="email" type="email" placeholder="you@example.com" required className="rounded-xl h-11" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
-                  <Input id="signup-password" name="password" type="password" placeholder="Min 6 characters" required minLength={6} />
+                  <Label htmlFor="signup-password" className="text-slate-700">Password</Label>
+                  <Input id="signup-password" name="password" type="password" placeholder="Min 6 characters" required minLength={6} className="rounded-xl h-11" />
                 </div>
-                {error && <p className="text-sm text-red-500">{error}</p>}
-                <Button type="submit" className="w-full bg-teal-600 hover:bg-teal-700" disabled={loading}>
+                {error && <p className="text-sm text-red-500 bg-red-50 p-2 rounded-xl">{error}</p>}
+                <button type="submit" disabled={loading} className="w-full btn-gradient text-white font-semibold py-3 rounded-xl disabled:opacity-50 transition-all">
                   {loading ? 'Creating account...' : 'Create Account'}
-                </Button>
+                </button>
               </form>
             </TabsContent>
           </Tabs>
@@ -427,17 +487,17 @@ function TagSelector({ label, options, selected, onChange, max }) {
 
   return (
     <div className="space-y-2">
-      <Label>{label} {max && <span className="text-muted-foreground text-xs">(select up to {max})</span>}</Label>
+      <Label>{label} {max && <span className="text-slate-400 text-xs">(select up to {max})</span>}</Label>
       <div className="flex flex-wrap gap-2">
         {options.map(opt => (
           <button
             key={opt}
             type="button"
             onClick={() => toggle(opt)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-medium border transition-all duration-200 ${
               selected.includes(opt)
-                ? 'bg-teal-600 text-white border-teal-600'
-                : 'bg-white text-foreground border-border hover:border-teal-300 hover:bg-teal-50'
+                ? `${getTagColor(opt)} border-current shadow-sm`
+                : 'bg-white text-slate-600 border-slate-200 hover:border-teal-300 hover:bg-teal-50/50'
             }`}
           >
             {selected.includes(opt) && <Check className="inline h-3 w-3 mr-1" />}
@@ -495,41 +555,43 @@ function ProfileView({ user, token, onUpdate }) {
   const progress = (step / totalSteps) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-cyan-50 py-8 px-4">
+    <div className="min-h-screen bg-slate-50 py-8 px-4">
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-3">
-            <Stethoscope className="h-6 w-6 text-teal-600" />
-            <span className="text-xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">1CoFounder</span>
+          <div className="inline-flex items-center gap-2.5 mb-3">
+            <div className="w-9 h-9 rounded-xl btn-gradient flex items-center justify-center">
+              <Stethoscope className="h-4.5 w-4.5 text-white" />
+            </div>
+            <span className="text-xl font-bold text-gradient">1CoFounder</span>
           </div>
-          <h1 className="text-2xl font-bold mb-2">Build Your Profile</h1>
-          <p className="text-muted-foreground">Tell the community who you are and what you're building</p>
-          <div className="mt-4 w-full bg-muted rounded-full h-2 max-w-md mx-auto">
-            <div className="bg-teal-600 h-2 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+          <h1 className="text-2xl font-extrabold text-slate-900 mb-2">Build Your Profile</h1>
+          <p className="text-slate-500">Tell the community who you are and what you're building</p>
+          <div className="mt-5 w-full bg-slate-200 rounded-full h-2 max-w-md mx-auto overflow-hidden">
+            <div className="btn-gradient h-2 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
           </div>
-          <p className="text-xs text-muted-foreground mt-2">Step {step} of {totalSteps}</p>
+          <p className="text-xs text-slate-400 mt-2">Step {step} of {totalSteps}</p>
         </div>
 
-        <Card className="shadow-lg border-0">
+        <Card className="shadow-xl shadow-slate-200/50 border-0 rounded-2xl">
           <CardContent className="p-6 sm:p-8">
             {/* Step 1: Basic Info */}
             {step === 1 && (
               <div className="space-y-5 animate-fade-in-up">
                 <div>
-                  <h2 className="text-lg font-semibold">About You</h2>
-                  <p className="text-sm text-muted-foreground">Let's start with the basics</p>
+                  <h2 className="text-lg font-bold text-slate-900">About You</h2>
+                  <p className="text-sm text-slate-500">Let's start with the basics</p>
                 </div>
                 <div className="space-y-2">
-                  <Label>Full Name <span className="text-red-400">*</span></Label>
-                  <Input value={form.name} onChange={e => updateField('name', e.target.value)} placeholder="e.g. Dr. Sarah Chen" />
+                  <Label className="text-slate-700">Full Name <span className="text-red-400">*</span></Label>
+                  <Input value={form.name} onChange={e => updateField('name', e.target.value)} placeholder="e.g. Dr. Sarah Chen" className="rounded-xl h-11" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Your Role <span className="text-red-400">*</span></Label>
+                  <Label className="text-slate-700">Your Role <span className="text-red-400">*</span></Label>
                   <Select value={form.role} onValueChange={v => updateField('role', v)}>
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="w-full rounded-xl h-11">
                       <SelectValue placeholder="Select your role" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="rounded-xl">
                       {ROLES.map(r => (
                         <SelectItem key={r} value={r}>{r}</SelectItem>
                       ))}
@@ -538,29 +600,27 @@ function ProfileView({ user, token, onUpdate }) {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>City</Label>
-                    <Input value={form.city} onChange={e => updateField('city', e.target.value)} placeholder="e.g. San Francisco" />
+                    <Label className="text-slate-700">City</Label>
+                    <Input value={form.city} onChange={e => updateField('city', e.target.value)} placeholder="e.g. Mumbai" className="rounded-xl h-11" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Country</Label>
-                    <Input value={form.country} onChange={e => updateField('country', e.target.value)} placeholder="e.g. United States" />
+                    <Label className="text-slate-700">Country</Label>
+                    <Input value={form.country} onChange={e => updateField('country', e.target.value)} placeholder="e.g. India" className="rounded-xl h-11" />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label>Short Bio</Label>
-                    <span className={`text-xs ${form.bio.length > 300 ? 'text-red-500 font-medium' : 'text-muted-foreground'}`}>
+                    <Label className="text-slate-700">Short Bio</Label>
+                    <span className={`text-xs ${form.bio.length > 300 ? 'text-red-500 font-medium' : 'text-slate-400'}`}>
                       {form.bio.length}/300
                     </span>
                   </div>
                   <Textarea
                     value={form.bio}
-                    onChange={e => {
-                      if (e.target.value.length <= 300) updateField('bio', e.target.value);
-                    }}
+                    onChange={e => { if (e.target.value.length <= 300) updateField('bio', e.target.value); }}
                     placeholder="Tell potential co-founders about yourself, your background, and what drives you..."
                     rows={4}
-                    className="resize-none"
+                    className="resize-none rounded-xl"
                   />
                 </div>
               </div>
@@ -570,8 +630,8 @@ function ProfileView({ user, token, onUpdate }) {
             {step === 2 && (
               <div className="space-y-6 animate-fade-in-up">
                 <div>
-                  <h2 className="text-lg font-semibold">Skills & Interests</h2>
-                  <p className="text-sm text-muted-foreground">What do you bring to the table?</p>
+                  <h2 className="text-lg font-bold text-slate-900">Skills & Interests</h2>
+                  <p className="text-sm text-slate-500">What do you bring to the table?</p>
                 </div>
                 <TagSelector label="Your Skills" options={SKILLS} selected={form.skills} onChange={v => updateField('skills', v)} max={8} />
                 <Separator />
@@ -583,21 +643,21 @@ function ProfileView({ user, token, onUpdate }) {
             {step === 3 && (
               <div className="space-y-6 animate-fade-in-up">
                 <div>
-                  <h2 className="text-lg font-semibold">Where Are You?</h2>
-                  <p className="text-sm text-muted-foreground">Your startup journey and availability</p>
+                  <h2 className="text-lg font-bold text-slate-900">Where Are You?</h2>
+                  <p className="text-sm text-slate-500">Your startup journey and availability</p>
                 </div>
                 <div className="space-y-2">
-                  <Label>Startup Stage</Label>
+                  <Label className="text-slate-700">Startup Stage</Label>
                   <div className="flex flex-wrap gap-2">
                     {STARTUP_STAGES.map(s => (
                       <button
                         key={s}
                         type="button"
                         onClick={() => updateField('startup_stage', s)}
-                        className={`px-4 py-2 rounded-lg text-sm border transition-all ${
+                        className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-all duration-200 ${
                           form.startup_stage === s
-                            ? 'bg-teal-600 text-white border-teal-600 shadow-sm'
-                            : 'bg-white border-border hover:border-teal-300 hover:bg-teal-50'
+                            ? 'bg-teal-700 text-white border-teal-700 shadow-md shadow-teal-700/20'
+                            : 'bg-white border-slate-200 text-slate-600 hover:border-teal-300 hover:bg-teal-50/50'
                         }`}
                       >
                         {s}
@@ -606,17 +666,17 @@ function ProfileView({ user, token, onUpdate }) {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Commitment Level</Label>
+                  <Label className="text-slate-700">Commitment Level</Label>
                   <div className="flex flex-wrap gap-2">
                     {COMMITMENT_LEVELS.map(c => (
                       <button
                         key={c}
                         type="button"
                         onClick={() => updateField('commitment_level', c)}
-                        className={`px-4 py-2 rounded-lg text-sm border transition-all ${
+                        className={`px-4 py-2.5 rounded-xl text-sm font-medium border transition-all duration-200 ${
                           form.commitment_level === c
-                            ? 'bg-teal-600 text-white border-teal-600 shadow-sm'
-                            : 'bg-white border-border hover:border-teal-300 hover:bg-teal-50'
+                            ? 'bg-teal-700 text-white border-teal-700 shadow-md shadow-teal-700/20'
+                            : 'bg-white border-slate-200 text-slate-600 hover:border-teal-300 hover:bg-teal-50/50'
                         }`}
                       >
                         {c}
@@ -631,35 +691,38 @@ function ProfileView({ user, token, onUpdate }) {
             {step === 4 && (
               <div className="space-y-6 animate-fade-in-up">
                 <div>
-                  <h2 className="text-lg font-semibold">Your Ideal Co-Founder</h2>
-                  <p className="text-sm text-muted-foreground">What roles are you looking for?</p>
+                  <h2 className="text-lg font-bold text-slate-900">Your Ideal Co-Founder</h2>
+                  <p className="text-sm text-slate-500">What roles are you looking for?</p>
                 </div>
                 <TagSelector label="Looking for co-founder roles" options={LOOKING_FOR} selected={form.looking_for} onChange={v => updateField('looking_for', v)} max={5} />
-                <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
-                  <h3 className="text-sm font-medium text-teal-800 mb-1">Almost done!</h3>
-                  <p className="text-xs text-teal-700">After completing your profile, you'll be able to discover and connect with healthcare innovators who match your interests.</p>
+                <div className="bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200 rounded-2xl p-5">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Sparkles className="h-4 w-4 text-teal-600" />
+                    <h3 className="text-sm font-bold text-teal-800">Almost done!</h3>
+                  </div>
+                  <p className="text-xs text-teal-700 leading-relaxed">After completing your profile, you'll be able to discover and connect with healthcare innovators who match your interests.</p>
                 </div>
               </div>
             )}
 
-            {error && <p className="text-sm text-red-500 mt-4">{error}</p>}
+            {error && <p className="text-sm text-red-500 mt-4 bg-red-50 p-2 rounded-xl">{error}</p>}
 
             <div className="flex justify-between mt-8">
               {step > 1 ? (
-                <Button variant="outline" onClick={() => setStep(s => s - 1)}>Back</Button>
+                <Button variant="outline" onClick={() => setStep(s => s - 1)} className="rounded-xl">Back</Button>
               ) : <div />}
               {step < totalSteps ? (
-                <Button
+                <button
                   onClick={() => setStep(s => s + 1)}
-                  className="bg-teal-600 hover:bg-teal-700"
+                  className="btn-gradient text-white font-semibold px-6 py-2.5 rounded-xl disabled:opacity-50 flex items-center gap-1"
                   disabled={step === 1 && !canProceedStep1}
                 >
-                  Continue <ChevronRight className="ml-1 h-4 w-4" />
-                </Button>
+                  Continue <ChevronRight className="h-4 w-4" />
+                </button>
               ) : (
-                <Button onClick={handleSubmit} disabled={loading} className="bg-teal-600 hover:bg-teal-700">
+                <button onClick={handleSubmit} disabled={loading} className="btn-gradient text-white font-semibold px-6 py-2.5 rounded-xl disabled:opacity-50">
                   {loading ? 'Saving...' : 'Complete Profile & Start Matching'}
-                </Button>
+                </button>
               )}
             </div>
           </CardContent>
@@ -675,7 +738,7 @@ function ProfileView({ user, token, onUpdate }) {
 function DiscoverView({ user, token, onChat }) {
   const [profiles, setProfiles] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [animating, setAnimating] = useState(null); // 'left' or 'right'
+  const [animating, setAnimating] = useState(null);
   const [showMatch, setShowMatch] = useState(false);
   const [matchedUser, setMatchedUser] = useState(null);
   const [matchId, setMatchId] = useState(null);
@@ -726,11 +789,11 @@ function DiscoverView({ user, token, onChat }) {
       <div className="flex items-center justify-center min-h-[70vh]">
         <div className="text-center">
           <div className="relative mx-auto mb-6 w-16 h-16">
-            <div className="absolute inset-0 rounded-full border-4 border-teal-100" />
+            <div className="absolute inset-0 rounded-full border-4 border-slate-100" />
             <div className="absolute inset-0 rounded-full border-4 border-teal-500 border-t-transparent animate-spin" />
           </div>
-          <h3 className="font-semibold mb-1">Finding your best matches...</h3>
-          <p className="text-sm text-muted-foreground">Ranking profiles by compatibility</p>
+          <h3 className="font-bold text-slate-900 mb-1">Finding your best matches...</h3>
+          <p className="text-sm text-slate-500">Ranking profiles by compatibility</p>
         </div>
       </div>
     );
@@ -740,12 +803,12 @@ function DiscoverView({ user, token, onChat }) {
     return (
       <div className="flex items-center justify-center min-h-[70vh]">
         <div className="text-center max-w-md px-4">
-          <div className="w-20 h-20 rounded-full bg-teal-100 flex items-center justify-center mx-auto mb-6">
-            <Users className="h-10 w-10 text-teal-500" />
+          <div className="w-20 h-20 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-6">
+            <Users className="h-10 w-10 text-slate-300" />
           </div>
-          <h2 className="text-2xl font-bold mb-2">You've Seen Everyone!</h2>
-          <p className="text-muted-foreground mb-6">Check back later for new healthcare innovators, or explore the Problem Board to find collaborators.</p>
-          <Button onClick={loadProfiles} className="bg-teal-600 hover:bg-teal-700">Refresh Profiles</Button>
+          <h2 className="text-2xl font-extrabold text-slate-900 mb-2">You've Seen Everyone!</h2>
+          <p className="text-slate-500 mb-6">Check back later for new healthcare innovators.</p>
+          <button onClick={loadProfiles} className="btn-gradient text-white font-semibold px-6 py-2.5 rounded-xl">Refresh Profiles</button>
         </div>
       </div>
     );
@@ -756,56 +819,49 @@ function DiscoverView({ user, token, onChat }) {
   const topSkills = (currentProfile.skills || []).slice(0, 3);
   const allInterests = currentProfile.interests || [];
 
-  // Determine stage badge color
   const stageColors = {
     'Idea': 'bg-blue-100 text-blue-700 border-blue-200',
     'Problem Validation': 'bg-purple-100 text-purple-700 border-purple-200',
     'MVP': 'bg-amber-100 text-amber-700 border-amber-200',
     'Startup': 'bg-green-100 text-green-700 border-green-200',
   };
-  const stageColor = stageColors[currentProfile.startup_stage] || 'bg-muted text-muted-foreground';
+  const stageColor = stageColors[currentProfile.startup_stage] || 'bg-slate-100 text-slate-600';
 
   return (
     <div className="max-w-xl mx-auto px-4 py-6">
-      {/* Page Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Find Cofounders</h1>
-          <p className="text-sm text-muted-foreground">Sorted by compatibility with your profile</p>
+          <h1 className="text-2xl font-extrabold text-slate-900">Find Cofounders</h1>
+          <p className="text-sm text-slate-500">Sorted by compatibility with your profile</p>
         </div>
-        <Badge variant="outline" className="text-xs">
-          {remaining} remaining
-        </Badge>
+        <Badge variant="outline" className="text-xs rounded-full px-3">{remaining} remaining</Badge>
       </div>
 
       {/* Profile Card */}
-      <div
-        className={`transition-all duration-400 ${
-          animating === 'left' ? 'animate-slide-out-left' :
-          animating === 'right' ? 'animate-slide-out-right' : ''
-        }`}
-      >
-        <Card className="overflow-hidden shadow-xl border-0 rounded-2xl">
-          {/* Profile Header with Photo */}
+      <div className={`transition-all duration-400 ${
+        animating === 'left' ? 'animate-slide-out-left' :
+        animating === 'right' ? 'animate-slide-out-right' : ''
+      }`}>
+        <div className="card-hover bg-white rounded-3xl shadow-lg overflow-hidden border border-slate-100">
+          {/* Profile Header */}
           <div className={`bg-gradient-to-br ${gradient} relative`}>
-            <div className="absolute inset-0 bg-black/10" />
+            <div className="absolute inset-0 bg-black/5" />
             <div className="relative px-6 pt-8 pb-6">
               <div className="flex items-start gap-5">
-                {/* Profile Photo / Avatar */}
                 <div className="shrink-0">
-                  <div className="w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-2xl font-bold text-white border-2 border-white/30 shadow-lg">
+                  <div className="w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-2xl font-bold text-white border-2 border-white/30 shadow-xl">
                     {getInitials(currentProfile.name)}
                   </div>
                 </div>
-                {/* Name, Role, Location */}
                 <div className="min-w-0 flex-1 pt-1">
-                  <h2 className="text-xl font-bold text-white truncate">{currentProfile.name}</h2>
+                  <h2 className="text-xl font-extrabold text-white truncate flex items-center gap-2">
+                    {currentProfile.name}
+                    {currentProfile.verified_status && <BadgeCheck className="h-5 w-5 text-emerald-300 shrink-0" />}
+                  </h2>
                   {currentProfile.role && (
-                    <div className="mt-1">
-                      <Badge className="bg-white/25 text-white border-0 text-xs font-medium backdrop-blur-sm">
-                        {currentProfile.role}
-                      </Badge>
-                    </div>
+                    <Badge className="mt-1.5 bg-white/20 text-white border-0 text-xs font-medium backdrop-blur-sm rounded-lg">
+                      {currentProfile.role}
+                    </Badge>
                   )}
                   {locationStr && (
                     <p className="mt-2 text-white/80 text-sm flex items-center gap-1.5">
@@ -817,72 +873,62 @@ function DiscoverView({ user, token, onChat }) {
             </div>
           </div>
 
-          <CardContent className="p-6 space-y-5">
-            {/* Bio */}
+          <div className="p-6 space-y-5">
             {currentProfile.bio && (
-              <p className="text-sm text-foreground leading-relaxed">{currentProfile.bio}</p>
+              <p className="text-sm text-slate-700 leading-relaxed">{currentProfile.bio}</p>
             )}
 
-            {/* Startup Stage */}
             {currentProfile.startup_stage && (
               <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Stage</span>
-                <Badge className={`text-xs font-medium ${stageColor}`}>
-                  <Zap className="h-3 w-3 mr-1" />
-                  {currentProfile.startup_stage}
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Stage</span>
+                <Badge className={`text-xs font-medium rounded-lg ${stageColor}`}>
+                  <Zap className="h-3 w-3 mr-1" />{currentProfile.startup_stage}
                 </Badge>
               </div>
             )}
 
-            {/* Top 3 Skills */}
             {topSkills.length > 0 && (
               <div>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Top Skills</p>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Top Skills</p>
                 <div className="flex flex-wrap gap-2">
                   {topSkills.map(s => (
-                    <div key={s} className="flex items-center gap-1.5 bg-teal-50 text-teal-700 border border-teal-200 rounded-lg px-3 py-1.5 text-sm font-medium">
-                      <Check className="h-3.5 w-3.5 text-teal-500" />
-                      {s}
+                    <div key={s} className={`flex items-center gap-1.5 ${getTagColor(s)} border rounded-xl px-3 py-1.5 text-xs font-medium`}>
+                      <Check className="h-3 w-3" />{s}
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Healthcare Interests */}
             {allInterests.length > 0 && (
               <div>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Healthcare Interests</p>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Healthcare Interests</p>
                 <div className="flex flex-wrap gap-1.5">
                   {allInterests.map(i => (
-                    <Badge key={i} variant="outline" className="text-xs font-normal">
-                      {i}
-                    </Badge>
+                    <Badge key={i} className={`text-xs font-normal rounded-lg border ${getTagColor(i)}`}>{i}</Badge>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Looking For */}
             {currentProfile.looking_for?.length > 0 && (
               <div>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Looking For</p>
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Looking For</p>
                 <div className="flex flex-wrap gap-1.5">
                   {currentProfile.looking_for.map(l => (
-                    <Badge key={l} className="text-xs bg-cyan-50 text-cyan-700 border border-cyan-200 font-normal">{l}</Badge>
+                    <Badge key={l} className={`text-xs font-normal rounded-lg border ${getTagColor(l)}`}>{l}</Badge>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Commitment Level */}
             {currentProfile.commitment_level && (
               <div className="flex items-center gap-2 pt-1">
-                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">{currentProfile.commitment_level} commitment</span>
+                <Clock className="h-3.5 w-3.5 text-slate-400" />
+                <span className="text-xs text-slate-500">{currentProfile.commitment_level} commitment</span>
               </div>
             )}
-          </CardContent>
+          </div>
 
           {/* Action Buttons */}
           <div className="px-6 pb-6 pt-2">
@@ -892,60 +938,51 @@ function DiscoverView({ user, token, onChat }) {
                 variant="outline"
                 size="lg"
                 onClick={() => handleSwipe('pass')}
-                className="h-12 text-base font-medium border-2 hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-95"
+                className="h-13 text-base font-semibold border-2 border-slate-200 hover:bg-slate-50 hover:border-slate-300 rounded-2xl transition-all duration-200 active:scale-95"
               >
-                <X className="h-5 w-5 mr-2 text-slate-400" />
-                Skip
+                <X className="h-5 w-5 mr-2 text-slate-400" />Skip
               </Button>
-              <Button
-                size="lg"
+              <button
                 onClick={() => handleSwipe('like')}
-                className="h-12 text-base font-medium bg-teal-600 hover:bg-teal-700 transition-all active:scale-95 shadow-md shadow-teal-200"
+                className="h-13 text-base font-semibold btn-gradient text-white rounded-2xl transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 py-3"
               >
-                <Heart className="h-5 w-5 mr-2" />
-                Interested
-              </Button>
+                <Heart className="h-5 w-5" />Interested
+              </button>
             </div>
           </div>
-        </Card>
+        </div>
       </div>
 
-      {/* Match Celebration Modal */}
+      {/* Match Modal */}
       {showMatch && matchedUser && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowMatch(false)}>
-          <div className="animate-match bg-white rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setShowMatch(false)}>
+          <div className="animate-match bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl" onClick={e => e.stopPropagation()}>
             <div className="text-5xl mb-4">🎉</div>
-            <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-teal-600 to-cyan-600 bg-clip-text text-transparent">It's a Match!</h2>
-            <p className="text-muted-foreground mb-2">You and <strong>{matchedUser.name}</strong> both want to connect!</p>
-            <p className="text-sm text-muted-foreground mb-6">Messaging is now unlocked. Start a conversation to explore building together.</p>
+            <h2 className="text-2xl font-extrabold text-gradient mb-2">It's a Match!</h2>
+            <p className="text-slate-500 mb-2">You and <strong className="text-slate-900">{matchedUser.name}</strong> both want to connect!</p>
+            <p className="text-sm text-slate-400 mb-6">Messaging is now unlocked.</p>
             <div className="flex items-center justify-center gap-4 mb-6">
-              <div className={`w-14 h-14 rounded-xl bg-gradient-to-r ${getGradient(user?.name)} flex items-center justify-center text-white font-bold shadow-lg`}>
+              <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${getGradient(user?.name)} flex items-center justify-center text-white font-bold shadow-lg`}>
                 {getInitials(user?.name)}
               </div>
               <div className="flex flex-col items-center">
                 <Sparkles className="h-6 w-6 text-teal-500" />
-                <span className="text-[10px] text-teal-600 font-medium mt-0.5">MATCHED</span>
+                <span className="text-[10px] text-teal-600 font-bold mt-0.5">MATCHED</span>
               </div>
-              <div className={`w-14 h-14 rounded-xl bg-gradient-to-r ${getGradient(matchedUser.name)} flex items-center justify-center text-white font-bold shadow-lg`}>
+              <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${getGradient(matchedUser.name)} flex items-center justify-center text-white font-bold shadow-lg`}>
                 {getInitials(matchedUser.name)}
               </div>
             </div>
             <div className="space-y-2">
               {onChat && matchId && (
-                <Button
-                  onClick={() => {
-                    setShowMatch(false);
-                    onChat({ id: matchId, matched_user: matchedUser });
-                  }}
-                  className="w-full bg-teal-600 hover:bg-teal-700"
+                <button
+                  onClick={() => { setShowMatch(false); onChat({ id: matchId, matched_user: matchedUser }); }}
+                  className="w-full btn-gradient text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2"
                 >
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  Send a Message
-                </Button>
+                  <MessageCircle className="h-4 w-4" />Send a Message
+                </button>
               )}
-              <Button variant="outline" onClick={() => setShowMatch(false)} className="w-full">
-                Keep Browsing
-              </Button>
+              <Button variant="outline" onClick={() => setShowMatch(false)} className="w-full rounded-xl">Keep Browsing</Button>
             </div>
           </div>
         </div>
@@ -955,7 +992,7 @@ function DiscoverView({ user, token, onChat }) {
 }
 
 // ==========================================
-// MESSAGING VIEW (Conversations + Chat)
+// MESSAGING VIEW
 // ==========================================
 const PROBLEM_SKILLS = ['AI Engineer', 'Clinician', 'Hardware Engineer', 'Product Manager', 'Software Engineer', 'Data Scientist', 'Researcher', 'Business Operator'];
 
@@ -967,7 +1004,6 @@ function formatTime(d) {
   const diffMins = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
-
   if (diffMins < 1) return 'now';
   if (diffMins < 60) return `${diffMins}m`;
   if (diffHours < 24) return `${diffHours}h`;
@@ -980,10 +1016,8 @@ function formatMsgTime(d) {
   const date = new Date(d);
   const now = new Date();
   const isToday = date.toDateString() === now.toDateString();
-  const yesterday = new Date(now);
-  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterday = new Date(now); yesterday.setDate(yesterday.getDate() - 1);
   const isYesterday = date.toDateString() === yesterday.toDateString();
-
   const timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   if (isToday) return timeStr;
   if (isYesterday) return `Yesterday ${timeStr}`;
@@ -1003,92 +1037,61 @@ function MessagingView({ user, token }) {
     try {
       const res = await api.get('conversations', token);
       setConversations(res.conversations || []);
-    } catch (err) {
-      console.error('Failed to load conversations', err);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { console.error(err); } finally { setLoading(false); }
   }, [token]);
 
   useEffect(() => { loadConversations(); }, [loadConversations]);
-
-  // Poll for new conversations
-  useEffect(() => {
-    const interval = setInterval(loadConversations, 8000);
-    return () => clearInterval(interval);
-  }, [loadConversations]);
+  useEffect(() => { const i = setInterval(loadConversations, 8000); return () => clearInterval(i); }, [loadConversations]);
 
   const loadMessages = useCallback(async () => {
     if (!activeConvo) return;
     try {
       const res = await api.get(`messages/${activeConvo.match_id}`, token);
       setMessages(res.messages || []);
-      // Mark as read
       await api.get(`messages/${activeConvo.match_id}/read`, token);
-      // Refresh conversation list to update unread counts
       const convRes = await api.get('conversations', token);
       setConversations(convRes.conversations || []);
-    } catch (err) {
-      console.error('Failed to load messages', err);
-    }
+    } catch (err) { console.error(err); }
   }, [activeConvo, token]);
 
   useEffect(() => {
-    if (activeConvo) {
-      loadMessages();
-      const interval = setInterval(loadMessages, 3000);
-      return () => clearInterval(interval);
-    }
+    if (activeConvo) { loadMessages(); const i = setInterval(loadMessages, 3000); return () => clearInterval(i); }
   }, [activeConvo, loadMessages]);
 
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages]);
+  useEffect(() => { if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight; }, [messages]);
 
   const sendMessage = async () => {
     if (!newMsg.trim() || sending || !activeConvo) return;
     setSending(true);
-    try {
-      await api.post('messages', { conversation_id: activeConvo.match_id, message: newMsg.trim() }, token);
-      setNewMsg('');
-      await loadMessages();
-    } catch (err) {
-      console.error('Failed to send', err);
-    } finally {
-      setSending(false);
-    }
+    try { await api.post('messages', { conversation_id: activeConvo.match_id, message: newMsg.trim() }, token); setNewMsg(''); await loadMessages(); }
+    catch (err) { console.error(err); } finally { setSending(false); }
   };
 
   const totalUnread = conversations.reduce((sum, c) => sum + (c.unread_count || 0), 0);
 
-  if (loading) {
-    return <div className="flex items-center justify-center min-h-[60vh]"><p className="text-muted-foreground">Loading messages...</p></div>;
-  }
+  if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><p className="text-slate-400">Loading messages...</p></div>;
 
-  // Empty state
   if (conversations.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[70vh]">
         <div className="text-center max-w-md px-4">
-          <MessageCircle className="h-14 w-14 text-muted-foreground/20 mx-auto mb-5" />
-          <h2 className="text-xl font-bold mb-2">No Conversations Yet</h2>
-          <p className="text-muted-foreground mb-4">Match with other healthcare innovators to start messaging. Both users must click "Interested" to unlock messaging.</p>
+          <div className="w-20 h-20 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-5">
+            <MessageCircle className="h-10 w-10 text-slate-300" />
+          </div>
+          <h2 className="text-xl font-extrabold text-slate-900 mb-2">No Conversations Yet</h2>
+          <p className="text-slate-500">Match with other innovators to start messaging. Both users must click "Interested".</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto h-[calc(100vh-4rem)] flex">
+    <div className="max-w-6xl mx-auto h-[calc(100vh-4rem)] flex bg-white rounded-t-2xl overflow-hidden border-x border-t border-slate-100 mt-1">
       {/* Conversation List */}
-      <div className={`w-full md:w-96 border-r flex flex-col bg-white ${activeConvo ? 'hidden md:flex' : 'flex'}`}>
-        <div className="p-4 border-b">
-          <h1 className="text-xl font-bold">Messages</h1>
-          {totalUnread > 0 && (
-            <p className="text-sm text-teal-600 font-medium">{totalUnread} unread message{totalUnread !== 1 ? 's' : ''}</p>
-          )}
+      <div className={`w-full md:w-96 border-r border-slate-100 flex flex-col ${activeConvo ? 'hidden md:flex' : 'flex'}`}>
+        <div className="p-5 border-b border-slate-100">
+          <h1 className="text-xl font-extrabold text-slate-900">Messages</h1>
+          {totalUnread > 0 && <p className="text-sm text-teal-600 font-semibold mt-0.5">{totalUnread} unread</p>}
         </div>
         <ScrollArea className="flex-1">
           {conversations.map(convo => {
@@ -1099,36 +1102,31 @@ function MessagingView({ user, token }) {
               <button
                 key={convo.match_id}
                 onClick={() => setActiveConvo(convo)}
-                className={`w-full p-4 flex items-center gap-3 hover:bg-muted/50 transition text-left border-b ${
-                  isActive ? 'bg-teal-50 border-l-2 border-l-teal-500' : ''
+                className={`w-full p-4 flex items-center gap-3 transition-all duration-200 text-left border-b border-slate-50 ${
+                  isActive ? 'bg-teal-50 border-l-[3px] border-l-teal-500' : 'hover:bg-slate-50'
                 }`}
               >
                 <div className="relative shrink-0">
-                  <div className={`w-12 h-12 rounded-full bg-gradient-to-r ${getGradient(mu?.name)} flex items-center justify-center text-white font-bold text-sm`}>
+                  <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${getGradient(mu?.name)} flex items-center justify-center text-white font-bold text-sm`}>
                     {getInitials(mu?.name)}
                   </div>
                   {hasUnread && (
-                    <div className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold border-2 border-white">
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-teal-500 rounded-full flex items-center justify-center text-[10px] text-white font-bold border-2 border-white">
                       {convo.unread_count}
                     </div>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <h3 className={`text-sm truncate ${hasUnread ? 'font-bold' : 'font-medium'}`}>{mu?.name}</h3>
-                    <span className="text-[10px] text-muted-foreground shrink-0 ml-2">
-                      {formatTime(convo.last_message?.created_at || convo.matched_at)}
-                    </span>
+                    <h3 className={`text-sm truncate ${hasUnread ? 'font-bold text-slate-900' : 'font-medium text-slate-700'}`}>{mu?.name}</h3>
+                    <span className="text-[10px] text-slate-400 shrink-0 ml-2">{formatTime(convo.last_message?.created_at || convo.matched_at)}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground">{mu?.role}</p>
+                  <p className="text-xs text-slate-400">{mu?.role}</p>
                   {convo.last_message ? (
-                    <p className={`text-xs truncate mt-0.5 ${hasUnread ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
-                      {convo.last_message.sender_id === user?.id ? 'You: ' : ''}
-                      {convo.last_message.message}
+                    <p className={`text-xs truncate mt-0.5 ${hasUnread ? 'text-slate-700 font-medium' : 'text-slate-400'}`}>
+                      {convo.last_message.sender_id === user?.id ? 'You: ' : ''}{convo.last_message.message}
                     </p>
-                  ) : (
-                    <p className="text-xs text-muted-foreground/60 mt-0.5 italic">No messages yet - say hello!</p>
-                  )}
+                  ) : <p className="text-xs text-slate-300 mt-0.5 italic">Say hello!</p>}
                 </div>
               </button>
             );
@@ -1137,73 +1135,58 @@ function MessagingView({ user, token }) {
       </div>
 
       {/* Chat Panel */}
-      <div className={`flex-1 flex flex-col bg-white ${!activeConvo ? 'hidden md:flex' : 'flex'}`}>
+      <div className={`flex-1 flex flex-col ${!activeConvo ? 'hidden md:flex' : 'flex'}`}>
         {!activeConvo ? (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center bg-slate-50/50">
             <div className="text-center">
-              <MessageCircle className="h-12 w-12 text-muted-foreground/20 mx-auto mb-3" />
-              <p className="text-muted-foreground">Select a conversation to start chatting</p>
+              <MessageCircle className="h-12 w-12 text-slate-200 mx-auto mb-3" />
+              <p className="text-slate-400">Select a conversation to start chatting</p>
             </div>
           </div>
         ) : (
           <>
-            {/* Chat Header */}
-            <div className="flex items-center gap-3 p-4 border-b bg-white shrink-0">
-              <button onClick={() => setActiveConvo(null)} className="md:hidden p-1 hover:bg-muted rounded-lg transition">
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-              <div className={`w-10 h-10 rounded-full bg-gradient-to-r ${getGradient(activeConvo.matched_user?.name)} flex items-center justify-center text-white text-sm font-bold`}>
+            <div className="flex items-center gap-3 p-4 border-b border-slate-100 bg-white shrink-0">
+              <button onClick={() => setActiveConvo(null)} className="md:hidden p-1.5 hover:bg-slate-100 rounded-xl transition"><ArrowLeft className="h-5 w-5 text-slate-600" /></button>
+              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${getGradient(activeConvo.matched_user?.name)} flex items-center justify-center text-white text-sm font-bold`}>
                 {getInitials(activeConvo.matched_user?.name)}
               </div>
               <div>
-                <h3 className="font-semibold">{activeConvo.matched_user?.name}</h3>
-                <p className="text-xs text-muted-foreground">{activeConvo.matched_user?.role} {activeConvo.matched_user?.city ? `· ${activeConvo.matched_user.city}` : ''}</p>
+                <h3 className="font-bold text-slate-900">{activeConvo.matched_user?.name}</h3>
+                <p className="text-xs text-slate-400">{activeConvo.matched_user?.role} {activeConvo.matched_user?.city ? `· ${activeConvo.matched_user.city}` : ''}</p>
               </div>
             </div>
 
-            {/* Messages */}
-            <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-muted/20">
+            <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50/30">
               {messages.length === 0 && (
                 <div className="text-center py-16">
-                  <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${getGradient(activeConvo.matched_user?.name)} flex items-center justify-center text-white font-bold text-lg mx-auto mb-4`}>
+                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${getGradient(activeConvo.matched_user?.name)} flex items-center justify-center text-white font-bold text-lg mx-auto mb-4 shadow-lg`}>
                     {getInitials(activeConvo.matched_user?.name)}
                   </div>
-                  <h3 className="font-semibold mb-1">You matched with {activeConvo.matched_user?.name}!</h3>
-                  <p className="text-sm text-muted-foreground">Start the conversation. Introduce yourself and discuss ideas.</p>
+                  <h3 className="font-bold text-slate-900 mb-1">Matched with {activeConvo.matched_user?.name}!</h3>
+                  <p className="text-sm text-slate-400">Start the conversation.</p>
                 </div>
               )}
               {messages.map(msg => {
                 const isMine = msg.sender_id === user?.id;
                 return (
                   <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${
+                    <div className={`max-w-[75%] px-4 py-2.5 text-sm ${
                       isMine
-                        ? 'bg-teal-600 text-white rounded-br-sm'
-                        : 'bg-white text-foreground rounded-bl-sm shadow-sm border'
+                        ? 'bg-teal-700 text-white rounded-2xl rounded-br-md shadow-md shadow-teal-700/10'
+                        : 'bg-white text-slate-800 rounded-2xl rounded-bl-md shadow-sm border border-slate-100'
                     }`}>
                       <p className="whitespace-pre-wrap">{msg.message}</p>
-                      <p className={`text-[10px] mt-1.5 ${isMine ? 'text-teal-200' : 'text-muted-foreground'}`}>
-                        {formatMsgTime(msg.created_at)}
-                      </p>
+                      <p className={`text-[10px] mt-1.5 ${isMine ? 'text-teal-200' : 'text-slate-400'}`}>{formatMsgTime(msg.created_at)}</p>
                     </div>
                   </div>
                 );
               })}
             </div>
 
-            {/* Input */}
-            <div className="p-4 border-t bg-white shrink-0">
+            <div className="p-4 border-t border-slate-100 bg-white shrink-0">
               <div className="flex gap-2">
-                <Input
-                  value={newMsg}
-                  onChange={e => setNewMsg(e.target.value)}
-                  placeholder="Type a message..."
-                  onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-                  className="flex-1"
-                />
-                <Button onClick={sendMessage} disabled={sending || !newMsg.trim()} size="icon" className="bg-teal-600 hover:bg-teal-700 shrink-0">
-                  <Send className="h-4 w-4" />
-                </Button>
+                <Input value={newMsg} onChange={e => setNewMsg(e.target.value)} placeholder="Type a message..." onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage()} className="flex-1 rounded-xl h-11" />
+                <button onClick={sendMessage} disabled={sending || !newMsg.trim()} className="btn-gradient text-white p-3 rounded-xl disabled:opacity-40 transition-all shrink-0"><Send className="h-4 w-4" /></button>
               </div>
             </div>
           </>
@@ -1214,7 +1197,7 @@ function MessagingView({ user, token }) {
 }
 
 // ==========================================
-// PROBLEMS VIEW (Post a Healthcare Problem)
+// PROBLEMS VIEW
 // ==========================================
 function ProblemsView({ user, token, onOpenChat }) {
   const [problems, setProblems] = useState([]);
@@ -1226,16 +1209,7 @@ function ProblemsView({ user, token, onOpenChat }) {
   const [actionFeedback, setActionFeedback] = useState({});
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await api.get('problems', token);
-        setProblems(res.problems || []);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    const load = async () => { try { const res = await api.get('problems', token); setProblems(res.problems || []); } catch (err) { console.error(err); } finally { setLoading(false); } };
     load();
   }, [token]);
 
@@ -1244,123 +1218,72 @@ function ProblemsView({ user, token, onOpenChat }) {
     setSubmitting(true);
     try {
       const res = await api.post('problems', form, token);
-      if (res.problem) {
-        setProblems(prev => [{ ...res.problem, creator: { name: user.name, role: user.role, id: user.id }, interested_users: [], interest_count: 0, user_interested: false }, ...prev]);
-        setForm({ title: '', description: '', clinical_context: '', skills_required: [] });
-        setShowForm(false);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setSubmitting(false);
-    }
+      if (res.problem) { setProblems(prev => [{ ...res.problem, creator: { name: user.name, role: user.role, id: user.id }, interested_users: [], interest_count: 0, user_interested: false }, ...prev]); setForm({ title: '', description: '', clinical_context: '', skills_required: [] }); setShowForm(false); }
+    } catch (err) { console.error(err); } finally { setSubmitting(false); }
   };
 
   const handleJoin = async (problemId) => {
     try {
       const res = await api.post(`problems/${problemId}/join`, {}, token);
-      if (!res.error) {
-        setProblems(prev => prev.map(p => {
-          if (p.id === problemId) {
-            return { ...p, user_interested: true, interest_count: (p.interest_count || 0) + 1 };
-          }
-          return p;
-        }));
-        setActionFeedback(prev => ({ ...prev, [problemId]: 'joined' }));
-        setTimeout(() => setActionFeedback(prev => ({ ...prev, [problemId]: null })), 3000);
-      }
-    } catch (err) {
-      console.error(err);
-    }
+      if (!res.error) { setProblems(prev => prev.map(p => p.id === problemId ? { ...p, user_interested: true, interest_count: (p.interest_count || 0) + 1 } : p)); setActionFeedback(prev => ({ ...prev, [problemId]: 'joined' })); setTimeout(() => setActionFeedback(prev => ({ ...prev, [problemId]: null })), 3000); }
+    } catch (err) { console.error(err); }
   };
 
   const handleContact = async (problemId) => {
     try {
       const res = await api.post(`problems/${problemId}/contact`, {}, token);
-      if (res.already_matched) {
-        setActionFeedback(prev => ({ ...prev, [`contact_${problemId}`]: 'already_matched' }));
-      } else if (res.matched) {
-        setActionFeedback(prev => ({ ...prev, [`contact_${problemId}`]: 'new_match' }));
-      } else if (res.interest_sent) {
-        setActionFeedback(prev => ({ ...prev, [`contact_${problemId}`]: 'interest_sent' }));
-      }
-      setTimeout(() => setActionFeedback(prev => ({ ...prev, [`contact_${problemId}`]: null })), 4000);
-    } catch (err) {
-      console.error(err);
-    }
+      const key = `contact_${problemId}`;
+      if (res.already_matched) setActionFeedback(prev => ({ ...prev, [key]: 'already_matched' }));
+      else if (res.matched) setActionFeedback(prev => ({ ...prev, [key]: 'new_match' }));
+      else if (res.interest_sent) setActionFeedback(prev => ({ ...prev, [key]: 'interest_sent' }));
+      setTimeout(() => setActionFeedback(prev => ({ ...prev, [key]: null })), 4000);
+    } catch (err) { console.error(err); }
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold">Post a Healthcare Problem</h1>
-          <p className="text-muted-foreground">Share challenges and find collaborators to solve them</p>
+          <h1 className="text-2xl font-extrabold text-slate-900">Post a Healthcare Problem</h1>
+          <p className="text-slate-500">Share challenges and find collaborators</p>
         </div>
-        <Button onClick={() => setShowForm(!showForm)} className="bg-teal-600 hover:bg-teal-700">
-          <Plus className="h-4 w-4 mr-2" />{showForm ? 'Cancel' : 'Post Problem'}
-        </Button>
+        <button onClick={() => setShowForm(!showForm)} className="btn-gradient text-white font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 text-sm">
+          <Plus className="h-4 w-4" />{showForm ? 'Cancel' : 'Post Problem'}
+        </button>
       </div>
 
-      {/* Create Form */}
       {showForm && (
-        <Card className="mb-8 border-teal-200 shadow-lg">
+        <Card className="mb-8 border-teal-200/50 shadow-xl shadow-teal-100/50 rounded-2xl">
           <CardContent className="p-6 space-y-4">
-            <h3 className="font-semibold text-lg">Describe Your Healthcare Problem</h3>
+            <h3 className="font-bold text-lg text-slate-900">Describe Your Healthcare Problem</h3>
+            <div className="space-y-2"><Label className="text-slate-700">Problem Title <span className="text-red-400">*</span></Label><Input value={form.title} onChange={e => setForm({...form, title: e.target.value})} placeholder="e.g., AI-powered triage system for rural ERs" className="rounded-xl h-11" /></div>
+            <div className="space-y-2"><Label className="text-slate-700">Description <span className="text-red-400">*</span></Label><Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="Describe the problem in detail..." rows={4} className="rounded-xl" /></div>
+            <div className="space-y-2"><Label className="text-slate-700">Clinical Context</Label><Textarea value={form.clinical_context} onChange={e => setForm({...form, clinical_context: e.target.value})} placeholder="Clinical setting, affected patients, impact..." rows={3} className="rounded-xl" /></div>
             <div className="space-y-2">
-              <Label>Problem Title <span className="text-red-400">*</span></Label>
-              <Input value={form.title} onChange={e => setForm({...form, title: e.target.value})} placeholder="e.g., AI-powered triage system for rural emergency rooms" />
-            </div>
-            <div className="space-y-2">
-              <Label>Problem Description <span className="text-red-400">*</span></Label>
-              <Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="Describe the problem in detail. What is the current state? What would a solution look like?" rows={4} />
-            </div>
-            <div className="space-y-2">
-              <Label>Clinical Context</Label>
-              <Textarea value={form.clinical_context} onChange={e => setForm({...form, clinical_context: e.target.value})} placeholder="What is the clinical setting? Who are the affected patients? What is the impact on outcomes?" rows={3} />
-            </div>
-            <div className="space-y-2">
-              <Label>Skills Required</Label>
+              <Label className="text-slate-700">Skills Required</Label>
               <div className="flex flex-wrap gap-2">
                 {PROBLEM_SKILLS.map(s => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => {
-                      const updated = form.skills_required.includes(s)
-                        ? form.skills_required.filter(x => x !== s)
-                        : [...form.skills_required, s];
-                      setForm({...form, skills_required: updated});
-                    }}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                      form.skills_required.includes(s)
-                        ? 'bg-teal-600 text-white border-teal-600'
-                        : 'bg-white text-foreground border-border hover:border-teal-300'
-                    }`}
-                  >
-                    {form.skills_required.includes(s) && <Check className="inline h-3 w-3 mr-1" />}
-                    {s}
+                  <button key={s} type="button" onClick={() => { const u = form.skills_required.includes(s) ? form.skills_required.filter(x => x !== s) : [...form.skills_required, s]; setForm({...form, skills_required: u}); }}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-medium border transition-all duration-200 ${form.skills_required.includes(s) ? `${getTagColor(s)} border-current shadow-sm` : 'bg-white text-slate-600 border-slate-200 hover:border-teal-300'}`}>
+                    {form.skills_required.includes(s) && <Check className="inline h-3 w-3 mr-1" />}{s}
                   </button>
                 ))}
               </div>
             </div>
             <div className="flex gap-3 pt-2">
-              <Button onClick={handleCreate} disabled={submitting || !form.title || !form.description} className="bg-teal-600 hover:bg-teal-700">
-                {submitting ? 'Posting...' : 'Post Problem'}
-              </Button>
-              <Button variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
+              <button onClick={handleCreate} disabled={submitting || !form.title || !form.description} className="btn-gradient text-white font-semibold px-6 py-2.5 rounded-xl disabled:opacity-50">{submitting ? 'Posting...' : 'Post Problem'}</button>
+              <Button variant="outline" onClick={() => setShowForm(false)} className="rounded-xl">Cancel</Button>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {loading ? (
-        <div className="text-center py-12"><p className="text-muted-foreground">Loading problems...</p></div>
-      ) : problems.length === 0 ? (
+      {loading ? <div className="text-center py-12"><p className="text-slate-400">Loading problems...</p></div>
+      : problems.length === 0 ? (
         <div className="text-center py-16">
-          <Lightbulb className="h-14 w-14 text-muted-foreground/20 mx-auto mb-5" />
-          <h3 className="text-lg font-semibold mb-2">No Problems Posted Yet</h3>
-          <p className="text-muted-foreground">Be the first to share a healthcare challenge and find collaborators!</p>
+          <div className="w-20 h-20 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-5"><Lightbulb className="h-10 w-10 text-slate-300" /></div>
+          <h3 className="text-lg font-bold text-slate-900 mb-2">No Problems Posted Yet</h3>
+          <p className="text-slate-500">Be the first to share a healthcare challenge!</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -1369,130 +1292,59 @@ function ProblemsView({ user, token, onOpenChat }) {
             const isCreator = p.creator_id === user?.id;
             const feedback = actionFeedback[p.id];
             const contactFeedback = actionFeedback[`contact_${p.id}`];
-
             return (
-              <Card key={p.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  {/* Header */}
-                  <div className="flex items-start gap-4">
-                    <div className={`w-10 h-10 rounded-lg ${getAvatarColor(p.creator?.name)} flex items-center justify-center text-white text-sm font-bold shrink-0`}>
-                      {getInitials(p.creator?.name)}
+              <div key={p.id} className="card-hover bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <div className="flex items-start gap-4">
+                  <div className={`w-11 h-11 rounded-xl ${getAvatarColor(p.creator?.name)} flex items-center justify-center text-white text-sm font-bold shrink-0`}>{getInitials(p.creator?.name)}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div><h3 className="font-bold text-slate-900 text-base leading-tight">{p.title}</h3><p className="text-xs text-slate-400 mt-1">{p.creator?.name} · {p.creator?.role} · {formatTime(p.created_at)}</p></div>
+                      {p.interest_count > 0 && <Badge className="bg-teal-50 text-teal-700 border-teal-200 text-xs rounded-full shrink-0"><Users className="h-3 w-3 mr-1" />{p.interest_count}</Badge>}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <h3 className="font-semibold text-base leading-tight">{p.title}</h3>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {p.creator?.name} · {p.creator?.role} · {formatTime(p.created_at)}
-                          </p>
-                        </div>
-                        {p.interest_count > 0 && (
-                          <Badge variant="secondary" className="text-xs shrink-0">
-                            <Users className="h-3 w-3 mr-1" />{p.interest_count} interested
-                          </Badge>
-                        )}
+                    <p className={`text-sm text-slate-600 mt-3 leading-relaxed ${!isExpanded ? 'line-clamp-3' : ''}`}>{p.description}</p>
+                    {isExpanded && p.clinical_context && (
+                      <div className="mt-3 bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-100 rounded-2xl p-4">
+                        <p className="text-xs font-bold text-teal-800 mb-1 flex items-center gap-1.5"><Stethoscope className="h-3.5 w-3.5" /> Clinical Context</p>
+                        <p className="text-sm text-teal-700 leading-relaxed">{p.clinical_context}</p>
                       </div>
-
-                      {/* Description */}
-                      <p className={`text-sm text-foreground mt-3 leading-relaxed ${!isExpanded ? 'line-clamp-3' : ''}`}>
-                        {p.description}
-                      </p>
-
-                      {/* Clinical Context (expanded) */}
-                      {isExpanded && p.clinical_context && (
-                        <div className="mt-3 bg-teal-50 border border-teal-100 rounded-lg p-3">
-                          <p className="text-xs font-medium text-teal-800 mb-1 flex items-center gap-1">
-                            <Stethoscope className="h-3.5 w-3.5" /> Clinical Context
-                          </p>
-                          <p className="text-sm text-teal-700">{p.clinical_context}</p>
-                        </div>
-                      )}
-
-                      {/* Skills Required */}
-                      {p.skills_required?.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mt-3">
-                          {p.skills_required.map(s => (
-                            <Badge key={s} variant="outline" className="text-xs">{s}</Badge>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Interested Users (expanded) */}
-                      {isExpanded && p.interested_users?.length > 0 && (
-                        <div className="mt-3 pt-3 border-t">
-                          <p className="text-xs font-medium text-muted-foreground mb-2">People interested:</p>
-                          <div className="flex flex-wrap gap-2">
-                            {p.interested_users.map((iu, idx) => (
-                              <div key={idx} className="flex items-center gap-1.5 bg-muted px-2 py-1 rounded-full">
-                                <div className={`w-5 h-5 rounded-full ${getAvatarColor(iu.user?.name)} flex items-center justify-center text-white text-[8px] font-bold`}>
-                                  {getInitials(iu.user?.name)}
-                                </div>
-                                <span className="text-xs">{iu.user?.name}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Actions */}
-                      <div className="flex items-center gap-2 mt-4 pt-3 border-t">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setExpandedId(isExpanded ? null : p.id)}
-                          className="text-xs text-muted-foreground hover:text-foreground"
-                        >
-                          <Eye className="h-3.5 w-3.5 mr-1" />
-                          {isExpanded ? 'Show Less' : 'View Details'}
-                        </Button>
-
-                        {!isCreator && (
-                          <>
-                            <Button
-                              size="sm"
-                              variant={p.user_interested ? "secondary" : "outline"}
-                              onClick={() => !p.user_interested && handleJoin(p.id)}
-                              disabled={p.user_interested}
-                              className="text-xs"
-                            >
-                              {p.user_interested || feedback === 'joined' ? (
-                                <><Check className="h-3.5 w-3.5 mr-1" />Joined</>
-                              ) : (
-                                <><Plus className="h-3.5 w-3.5 mr-1" />Join Project</>
-                              )}
-                            </Button>
-
-                            <Button
-                              size="sm"
-                              onClick={() => handleContact(p.id)}
-                              className="text-xs bg-teal-600 hover:bg-teal-700"
-                            >
-                              <MessageCircle className="h-3.5 w-3.5 mr-1" />
-                              Contact Creator
-                            </Button>
-                          </>
-                        )}
-                        {isCreator && (
-                          <Badge className="bg-teal-50 text-teal-700 border-teal-200 text-xs">Your Problem</Badge>
-                        )}
+                    )}
+                    {p.skills_required?.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-3">
+                        {p.skills_required.map(s => <Badge key={s} className={`text-xs font-medium rounded-lg border ${getTagColor(s)}`}>{s}</Badge>)}
                       </div>
-
-                      {/* Contact Feedback */}
-                      {contactFeedback && (
-                        <div className={`mt-2 text-xs px-3 py-2 rounded-lg ${
-                          contactFeedback === 'already_matched' ? 'bg-teal-50 text-teal-700' :
-                          contactFeedback === 'new_match' ? 'bg-green-50 text-green-700' :
-                          'bg-blue-50 text-blue-700'
-                        }`}>
-                          {contactFeedback === 'already_matched' && '✅ You are already matched! Go to Messages to chat.'}
-                          {contactFeedback === 'new_match' && '🎉 It\'s a match! You can now message the creator.'}
-                          {contactFeedback === 'interest_sent' && '📩 Connection request sent! The creator will see your interest.'}
+                    )}
+                    {isExpanded && p.interested_users?.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-slate-100">
+                        <p className="text-xs font-semibold text-slate-400 mb-2">People interested:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {p.interested_users.map((iu, idx) => <div key={idx} className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-full"><div className={`w-5 h-5 rounded-full ${getAvatarColor(iu.user?.name)} flex items-center justify-center text-white text-[8px] font-bold`}>{getInitials(iu.user?.name)}</div><span className="text-xs text-slate-600">{iu.user?.name}</span></div>)}
                         </div>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-100">
+                      <Button variant="ghost" size="sm" onClick={() => setExpandedId(isExpanded ? null : p.id)} className="text-xs text-slate-500 hover:text-slate-700 rounded-xl"><Eye className="h-3.5 w-3.5 mr-1" />{isExpanded ? 'Show Less' : 'View Details'}</Button>
+                      {!isCreator && (
+                        <>
+                          <Button size="sm" variant={p.user_interested ? 'secondary' : 'outline'} onClick={() => !p.user_interested && handleJoin(p.id)} disabled={p.user_interested} className="text-xs rounded-xl">
+                            {p.user_interested || feedback === 'joined' ? <><Check className="h-3.5 w-3.5 mr-1" />Joined</> : <><Plus className="h-3.5 w-3.5 mr-1" />Join Project</>}
+                          </Button>
+                          <button onClick={() => handleContact(p.id)} className="btn-gradient text-white text-xs font-semibold px-3 py-1.5 rounded-xl flex items-center gap-1"><MessageCircle className="h-3.5 w-3.5" />Contact Creator</button>
+                        </>
                       )}
+                      {isCreator && <Badge className="bg-teal-50 text-teal-700 border-teal-200 text-xs rounded-lg">Your Problem</Badge>}
                     </div>
+                    {contactFeedback && (
+                      <div className={`mt-2 text-xs px-3 py-2 rounded-xl font-medium ${
+                        contactFeedback === 'already_matched' ? 'bg-teal-50 text-teal-700' : contactFeedback === 'new_match' ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700'
+                      }`}>
+                        {contactFeedback === 'already_matched' && 'You are already matched! Go to Messages to chat.'}
+                        {contactFeedback === 'new_match' && "It's a match! You can now message the creator."}
+                        {contactFeedback === 'interest_sent' && 'Connection request sent!'}
+                      </div>
+                    )}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             );
           })}
         </div>
@@ -1512,16 +1364,7 @@ function ProjectsView({ user, token }) {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await api.get('projects', token);
-        setProjects(res.projects || []);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    const load = async () => { try { const res = await api.get('projects', token); setProjects(res.projects || []); } catch (err) { console.error(err); } finally { setLoading(false); } };
     load();
   }, [token]);
 
@@ -1530,134 +1373,133 @@ function ProjectsView({ user, token }) {
     setSubmitting(true);
     try {
       const res = await api.post('projects', form, token);
-      if (res.project) {
-        setProjects(prev => [{ ...res.project, members: [{ user_id: user.id, role: 'Creator', user: { name: user.name, role: user.role, id: user.id } }] }, ...prev]);
-        setForm({ name: '', description: '', stage: 'Idea' });
-        setShowForm(false);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setSubmitting(false);
-    }
+      if (res.project) { setProjects(prev => [{ ...res.project, members: [{ user_id: user.id, role: 'Creator', user: { name: user.name, role: user.role, id: user.id } }] }, ...prev]); setForm({ name: '', description: '', stage: 'Idea' }); setShowForm(false); }
+    } catch (err) { console.error(err); } finally { setSubmitting(false); }
   };
 
   const handleJoin = async (projectId) => {
     try {
       const res = await api.post(`projects/${projectId}/join`, { role: user.role || 'Member' }, token);
-      if (res.member) {
-        setProjects(prev => prev.map(p => {
-          if (p.id === projectId) {
-            return { ...p, members: [...(p.members || []), { user_id: user.id, role: res.member.role, user: { name: user.name, id: user.id, role: user.role } }] };
-          }
-          return p;
-        }));
-      }
-    } catch (err) {
-      console.error(err);
-    }
+      if (res.member) { setProjects(prev => prev.map(p => p.id === projectId ? { ...p, members: [...(p.members || []), { user_id: user.id, role: res.member.role, user: { name: user.name, id: user.id, role: user.role } }] } : p)); }
+    } catch (err) { console.error(err); }
   };
 
   const stageColors = {
-    'Idea': 'bg-blue-100 text-blue-700',
-    'Research': 'bg-purple-100 text-purple-700',
-    'Prototype': 'bg-amber-100 text-amber-700',
-    'MVP': 'bg-teal-100 text-teal-700',
-    'Growth': 'bg-green-100 text-green-700',
-    'Scale': 'bg-cyan-100 text-cyan-700',
+    'Idea': 'bg-blue-100 text-blue-700 border-blue-200',
+    'Problem Validation': 'bg-purple-100 text-purple-700 border-purple-200',
+    'MVP': 'bg-amber-100 text-amber-700 border-amber-200',
+    'Startup': 'bg-green-100 text-green-700 border-green-200',
+  };
+
+  const milestones = [
+    { label: 'Problem Validation', key: 'Problem Validation' },
+    { label: 'MVP Development', key: 'MVP' },
+    { label: 'Pilot Testing', key: 'Startup' },
+  ];
+
+  const getProgress = (stage) => {
+    const stageOrder = ['Idea', 'Problem Validation', 'MVP', 'Startup'];
+    const idx = stageOrder.indexOf(stage);
+    if (idx < 0) return 0;
+    return ((idx + 1) / stageOrder.length) * 100;
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold">Healthcare Projects</h1>
-          <p className="text-muted-foreground">Join or create projects to build solutions</p>
+          <h1 className="text-2xl font-extrabold text-slate-900">Healthcare Projects</h1>
+          <p className="text-slate-500">Join or create projects to build solutions</p>
         </div>
-        <Button onClick={() => setShowForm(!showForm)} className="bg-teal-600 hover:bg-teal-700">
-          <Plus className="h-4 w-4 mr-2" />{showForm ? 'Cancel' : 'New Project'}
-        </Button>
+        <button onClick={() => setShowForm(!showForm)} className="btn-gradient text-white font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 text-sm">
+          <Plus className="h-4 w-4" />{showForm ? 'Cancel' : 'New Project'}
+        </button>
       </div>
 
-      {/* Create Form */}
       {showForm && (
-        <Card className="mb-8 border-teal-200 shadow-md">
+        <Card className="mb-8 border-teal-200/50 shadow-xl shadow-teal-100/50 rounded-2xl">
           <CardContent className="p-6 space-y-4">
-            <h3 className="font-semibold text-lg">Create a Project</h3>
+            <h3 className="font-bold text-lg text-slate-900">Create a Project</h3>
+            <div className="space-y-2"><Label className="text-slate-700">Project Name</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="e.g., AI-Powered Triage System" className="rounded-xl h-11" /></div>
+            <div className="space-y-2"><Label className="text-slate-700">Description</Label><Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="What are you building?" rows={4} className="rounded-xl" /></div>
             <div className="space-y-2">
-              <Label>Project Name</Label>
-              <Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="e.g., AI-Powered Triage System" />
-            </div>
-            <div className="space-y-2">
-              <Label>Description</Label>
-              <Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="What are you building?" rows={4} />
-            </div>
-            <div className="space-y-2">
-              <Label>Stage</Label>
+              <Label className="text-slate-700">Stage</Label>
               <div className="flex flex-wrap gap-2">
                 {STARTUP_STAGES.map(s => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setForm({...form, stage: s})}
-                    className={`px-3 py-1.5 rounded-full text-sm border transition-all ${
-                      form.stage === s ? 'bg-teal-600 text-white border-teal-600' : 'bg-white border-border hover:border-teal-300'
-                    }`}
-                  >
-                    {s}
-                  </button>
+                  <button key={s} type="button" onClick={() => setForm({...form, stage: s})} className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all duration-200 ${form.stage === s ? 'bg-teal-700 text-white border-teal-700 shadow-md shadow-teal-700/20' : 'bg-white border-slate-200 text-slate-600 hover:border-teal-300'}`}>{s}</button>
                 ))}
               </div>
             </div>
-            <Button onClick={handleCreate} disabled={submitting} className="bg-teal-600 hover:bg-teal-700">
-              {submitting ? 'Creating...' : 'Create Project'}
-            </Button>
+            <button onClick={handleCreate} disabled={submitting} className="btn-gradient text-white font-semibold px-6 py-2.5 rounded-xl disabled:opacity-50">{submitting ? 'Creating...' : 'Create Project'}</button>
           </CardContent>
         </Card>
       )}
 
-      {loading ? (
-        <div className="text-center py-12"><p className="text-muted-foreground">Loading projects...</p></div>
-      ) : projects.length === 0 ? (
+      {loading ? <div className="text-center py-12"><p className="text-slate-400">Loading projects...</p></div>
+      : projects.length === 0 ? (
         <div className="text-center py-16">
-          <FolderKanban className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No Projects Yet</h3>
-          <p className="text-muted-foreground">Create the first healthcare project!</p>
+          <div className="w-20 h-20 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-5"><FolderKanban className="h-10 w-10 text-slate-300" /></div>
+          <h3 className="text-lg font-bold text-slate-900 mb-2">No Projects Yet</h3>
+          <p className="text-slate-500">Create the first healthcare project!</p>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-5 md:grid-cols-2">
           {projects.map(p => {
             const isMember = (p.members || []).some(m => m.user_id === user?.id);
+            const progress = getProgress(p.stage);
             return (
-              <Card key={p.id} className="hover:shadow-md transition-shadow border-0 shadow-sm">
-                <CardContent className="p-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-semibold text-base">{p.name}</h3>
-                    <Badge className={`text-xs ${stageColors[p.stage] || 'bg-muted text-foreground'}`}>{p.stage}</Badge>
+              <div key={p.id} className="card-hover bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                {/* Header */}
+                <div className="flex items-start justify-between mb-3">
+                  <h3 className="font-bold text-slate-900 text-base">{p.name}</h3>
+                  <Badge className={`text-xs font-medium rounded-lg ${stageColors[p.stage] || 'bg-slate-100 text-slate-600'}`}>{p.stage}</Badge>
+                </div>
+                <p className="text-sm text-slate-500 line-clamp-3 mb-4 leading-relaxed">{p.description}</p>
+
+                {/* Progress */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Progress</span>
+                    <span className="text-xs font-bold text-teal-600">{Math.round(progress)}%</span>
                   </div>
-                  <p className="text-sm text-muted-foreground line-clamp-3 mb-4">{p.description}</p>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">{(p.members || []).length} member(s)</span>
+                  <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                    <div className="btn-gradient h-2 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
                   </div>
-                  <div className="flex items-center gap-1 mb-4">
-                    {(p.members || []).slice(0, 5).map((m, i) => (
-                      <div key={i} className={`w-7 h-7 rounded-full ${getAvatarColor(m.user?.name)} flex items-center justify-center text-white text-[9px] font-bold -ml-1 first:ml-0 border-2 border-white`}>
-                        {getInitials(m.user?.name)}
-                      </div>
-                    ))}
+                  <div className="flex justify-between mt-2">
+                    {milestones.map((m, i) => {
+                      const stageOrder = ['Idea', 'Problem Validation', 'MVP', 'Startup'];
+                      const currentIdx = stageOrder.indexOf(p.stage);
+                      const milestoneIdx = stageOrder.indexOf(m.key);
+                      const completed = currentIdx >= milestoneIdx;
+                      return (
+                        <div key={i} className="flex items-center gap-1">
+                          <div className={`w-3 h-3 rounded-full flex items-center justify-center ${completed ? 'bg-teal-500' : 'bg-slate-200'}`}>
+                            {completed && <Check className="h-2 w-2 text-white" />}
+                          </div>
+                          <span className={`text-[10px] ${completed ? 'text-teal-600 font-medium' : 'text-slate-400'}`}>{m.label}</span>
+                        </div>
+                      );
+                    })}
                   </div>
-                  {!isMember ? (
-                    <Button size="sm" onClick={() => handleJoin(p.id)} className="bg-teal-600 hover:bg-teal-700 w-full">
-                      Join Project
-                    </Button>
-                  ) : (
-                    <Badge className="bg-teal-50 text-teal-700 border-teal-200">
-                      <Check className="h-3 w-3 mr-1" />Member
-                    </Badge>
-                  )}
-                </CardContent>
-              </Card>
+                </div>
+
+                {/* Team */}
+                <div className="flex items-center gap-2 mb-4">
+                  <Users className="h-3.5 w-3.5 text-slate-400" />
+                  <span className="text-xs text-slate-500 font-medium">{(p.members || []).length} member(s)</span>
+                </div>
+                <div className="flex items-center gap-1 mb-4">
+                  {(p.members || []).slice(0, 5).map((m, i) => (
+                    <div key={i} className={`w-8 h-8 rounded-xl ${getAvatarColor(m.user?.name)} flex items-center justify-center text-white text-[9px] font-bold -ml-1 first:ml-0 border-2 border-white shadow-sm`}>{getInitials(m.user?.name)}</div>
+                  ))}
+                </div>
+
+                {!isMember ? (
+                  <button onClick={() => handleJoin(p.id)} className="w-full btn-gradient text-white font-semibold py-2.5 rounded-xl text-sm">Join Project</button>
+                ) : (
+                  <Badge className="bg-teal-50 text-teal-700 border-teal-200 rounded-lg"><Check className="h-3 w-3 mr-1" />Member</Badge>
+                )}
+              </div>
             );
           })}
         </div>
@@ -1721,7 +1563,7 @@ export default function App() {
   if (loading) return <LoadingScreen />;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-slate-50">
       {user && !['landing', 'auth'].includes(currentView) && (
         <Navbar currentView={currentView} setView={setCurrentView} user={user} onLogout={handleLogout} />
       )}
