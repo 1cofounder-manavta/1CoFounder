@@ -728,6 +728,7 @@ export async function POST(request, { params }) {
         is_suspended: false,
         report_count: 0,
         email_verified: false,
+        requires_verification: true,
         verification_token: verificationToken,
         verification_expires: verificationExpires,
         notification_preferences: { matches: true, messages: true, problems: true, projects: true },
@@ -735,14 +736,13 @@ export async function POST(request, { params }) {
       };
 
       await db.collection('users').insertOne(user);
-      const token = jwt.sign({ id: userId, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
-      const { password_hash, _id, ...safeUser } = user;
 
       // Send verification email
       const verifyUrl = `${BASE_URL}/api/auth/verify?token=${verificationToken}`;
       sendEmail(user.email, 'Verify your 1CoFounder account', emailTemplate('Welcome to 1CoFounder!', `<p>Hi ${name},</p><p>Thanks for joining 1CoFounder! Please verify your email address to get started.</p><a href="${verifyUrl}" style="display:inline-block;background:#0f766e;color:white;font-weight:600;padding:12px 28px;border-radius:12px;text-decoration:none;margin:16px 0;">Verify Email</a><p style="font-size:12px;color:#94a3b8;">This link expires in 24 hours.</p>`));
 
-      return json({ token, user: safeUser }, 201);
+      // Don't return token — user must verify email first
+      return json({ email_verification_required: true, email: user.email }, 201);
     }
 
     // POST /api/auth/login
@@ -755,6 +755,11 @@ export async function POST(request, { params }) {
 
       const valid = await bcrypt.compare(password, user.password_hash);
       if (!valid) return json({ error: 'Invalid email or password' }, 401);
+
+      // Block unverified NEW users (requires_verification flag). Old users without this flag are grandfathered in.
+      if (user.requires_verification && !user.email_verified) {
+        return json({ email_verification_required: true, email: user.email }, 403);
+      }
 
       const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
       const { password_hash, _id, ...safeUser } = user;
@@ -1128,13 +1133,22 @@ export async function POST(request, { params }) {
 
     // POST /api/auth/resend-verification
     if (path[0] === 'auth' && path[1] === 'resend-verification') {
+      // Works with either auth token OR email in body (for pre-login resend)
+      let user;
       const authUser = verifyAuth(request);
-      if (!authUser) return json({ error: 'Unauthorized' }, 401);
-      const user = await db.collection('users').findOne({ id: authUser.id });
-      if (user?.email_verified) return json({ error: 'Already verified' }, 400);
+      if (authUser) {
+        user = await db.collection('users').findOne({ id: authUser.id });
+      } else {
+        const body = await request.json().catch(() => ({}));
+        if (body.email) {
+          user = await db.collection('users').findOne({ email: body.email.toLowerCase() });
+        }
+      }
+      if (!user) return json({ error: 'User not found' }, 404);
+      if (user.email_verified) return json({ error: 'Already verified' }, 400);
       const newToken = crypto.randomBytes(32).toString('hex');
       const newExpires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-      await db.collection('users').updateOne({ id: authUser.id }, { $set: { verification_token: newToken, verification_expires: newExpires } });
+      await db.collection('users').updateOne({ id: user.id }, { $set: { verification_token: newToken, verification_expires: newExpires } });
       const verifyUrl = `${BASE_URL}/api/auth/verify?token=${newToken}`;
       sendEmail(user.email, 'Verify your 1CoFounder account', emailTemplate('Verify Your Email', `<p>Hi ${user.name},</p><p>Click below to verify your email address.</p><a href="${verifyUrl}" style="display:inline-block;background:#0f766e;color:white;font-weight:600;padding:12px 28px;border-radius:12px;text-decoration:none;margin:16px 0;">Verify Email</a><p style="font-size:12px;color:#94a3b8;">This link expires in 24 hours.</p>`));
       return json({ success: true });

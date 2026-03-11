@@ -17,8 +17,11 @@ import {
   Briefcase, Stethoscope, ChevronRight,
   Sparkles, Shield, Globe, Zap, Search, Check,
   Handshake, Target, Clock, Eye, BadgeCheck, Brain,
-  Activity, BarChart3, Rocket, Bell, Flag, Ban, Settings
+  Activity, BarChart3, Rocket, Bell, Flag, Ban, Settings, Mail
 } from 'lucide-react';
+
+import logoHeaderImg from './logo-header.jpeg';
+import logoIconImg from './logo-icon.jpeg';
 
 // ==========================================
 // CONSTANTS
@@ -200,7 +203,7 @@ function LoadingScreen() {
     <div className="min-h-screen flex items-center justify-center bg-slate-50">
       <div className="text-center">
         <div className="inline-flex items-center gap-3 mb-6">
-          <img src="/logo-icon.jpeg" alt="1CoFounder" className="h-12 w-12 rounded-2xl object-contain animate-pulse-glow shadow-lg" />
+          <img src={logoIconImg.src} alt="1CoFounder" className="h-12 w-12 rounded-2xl object-contain animate-pulse-glow shadow-lg" />
           <span className="text-2xl font-bold text-gradient">1CoFounder</span>
         </div>
         <div className="flex gap-1.5 justify-center">
@@ -263,7 +266,7 @@ function Navbar({ currentView, setView, user, onLogout }) {
     <nav className="sticky top-0 z-50 glass border-b border-white/40 shadow-sm" data-testid="main-navbar">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         <button data-testid="nav-logo" onClick={() => setView('discover')} className="flex items-center gap-2.5 hover:opacity-80 transition-all duration-200">
-          <img src="/logo-header.jpeg" alt="Manavta | 1CoFounder" className="h-12 object-contain" />
+          <img src={logoHeaderImg.src} alt="Manavta | 1CoFounder" className="h-12 object-contain" />
         </button>
         <div className="flex items-center gap-0.5">
           {navItems.map(item => {
@@ -364,7 +367,7 @@ function LandingView({ onGetStarted, onViewPage }) {
         <nav className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-5 flex justify-between items-center">
           <div className="flex items-center">
             <div className="bg-white/95 backdrop-blur-sm rounded-xl px-4 py-2 shadow-lg">
-              <img src="/logo-header.jpeg" alt="Manavta | 1CoFounder" className="h-12 object-contain" />
+              <img src={logoHeaderImg.src} alt="Manavta | 1CoFounder" className="h-12 object-contain" />
             </div>
           </div>
           <Button data-testid="landing-get-started-btn" onClick={onGetStarted} className="bg-white text-teal-700 hover:bg-white/90 rounded-xl font-semibold shadow-lg shadow-black/10">
@@ -483,7 +486,7 @@ function LandingView({ onGetStarted, onViewPage }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
             <div className="flex items-center gap-3">
-              <img src="/logo-header.jpeg" alt="Manavta | 1CoFounder" className="h-12 object-contain" />
+              <img src={logoHeaderImg.src} alt="Manavta | 1CoFounder" className="h-12 object-contain" />
               <span className="text-sm text-slate-400">| A Manavta Foundation Initiative</span>
             </div>
             <p className="text-sm text-slate-400">Accelerating healthcare innovation through collaboration.</p>
@@ -505,6 +508,24 @@ function LandingView({ onGetStarted, onViewPage }) {
 function AuthView({ onAuth }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [verificationEmail, setVerificationEmail] = useState(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [verified, setVerified] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('verified') === 'true') {
+      setVerified(true);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const t = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+      return () => clearTimeout(t);
+    }
+  }, [resendCooldown]);
 
   const handleSubmit = async (e, isLogin) => {
     e.preventDefault();
@@ -520,7 +541,9 @@ function AuthView({ onAuth }) {
         : { name: data.name, email: data.email, password: data.password };
 
       const res = await api.post(endpoint, body);
-      if (res.error) {
+      if (res.email_verification_required) {
+        setVerificationEmail(res.email);
+      } else if (res.error) {
         setError(res.error);
       } else {
         onAuth(res.token, res.user);
@@ -532,16 +555,68 @@ function AuthView({ onAuth }) {
     }
   };
 
+  const handleResend = async () => {
+    if (resendCooldown > 0) return;
+    const res = await api.post('auth/resend-verification', { email: verificationEmail });
+    if (res.success) setResendCooldown(60);
+  };
+
+  // Email verification pending screen
+  if (verificationEmail) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4" data-testid="verification-pending-page">
+        <div className="w-full max-w-md text-center">
+          <div className="inline-flex items-center gap-2.5 mb-6">
+            <img src={logoIconImg.src} alt="1CoFounder" className="h-10 w-10 rounded-2xl object-contain shadow-lg shadow-teal-600/20" />
+            <span className="text-2xl font-bold text-gradient">1CoFounder</span>
+          </div>
+          <Card className="shadow-xl shadow-slate-200/50 border-0 rounded-2xl overflow-hidden">
+            <CardContent className="p-8">
+              <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-teal-50 flex items-center justify-center">
+                <Mail className="h-8 w-8 text-teal-600" />
+              </div>
+              <h2 className="text-xl font-bold text-slate-900 mb-2">Check your email</h2>
+              <p className="text-sm text-slate-500 mb-1">We sent a verification link to</p>
+              <p className="text-sm font-semibold text-slate-700 mb-6" data-testid="verification-email">{verificationEmail}</p>
+              <p className="text-xs text-slate-400 mb-6">Click the link in your email to verify your account and start finding co-founders. The link expires in 24 hours.</p>
+              <button
+                data-testid="resend-verification-btn"
+                onClick={handleResend}
+                disabled={resendCooldown > 0}
+                className="w-full btn-gradient text-white font-semibold py-3 rounded-xl disabled:opacity-50 transition-all mb-3"
+              >
+                {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Verification Email'}
+              </button>
+              <button
+                data-testid="back-to-login-btn"
+                onClick={() => { setVerificationEmail(null); setError(''); }}
+                className="w-full text-sm text-slate-500 hover:text-teal-700 font-medium py-2 transition-colors"
+              >
+                Back to Sign In
+              </button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4" data-testid="auth-page">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2.5 mb-3">
-            <img src="/logo-icon.jpeg" alt="1CoFounder" className="h-10 w-10 rounded-2xl object-contain shadow-lg shadow-teal-600/20" />
+            <img src={logoIconImg.src} alt="1CoFounder" className="h-10 w-10 rounded-2xl object-contain shadow-lg shadow-teal-600/20" />
             <span className="text-2xl font-bold text-gradient">1CoFounder</span>
           </div>
           <p className="text-slate-500">Find your healthcare co-founder</p>
         </div>
+
+        {verified && (
+          <div className="mb-4 bg-teal-50 border border-teal-200 text-teal-700 rounded-xl p-3 text-sm font-medium text-center flex items-center justify-center gap-2" data-testid="verified-success-banner">
+            <Check className="h-4 w-4" /> Email verified successfully! You can now sign in.
+          </div>
+        )}
 
         <Card className="shadow-xl shadow-slate-200/50 border-0 rounded-2xl overflow-hidden">
           <Tabs defaultValue="login">
@@ -950,7 +1025,7 @@ function ProfileView({ user, token, onUpdate }) {
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2.5 mb-3">
-            <img src="/logo-icon.jpeg" alt="1CoFounder" className="h-9 w-9 rounded-xl object-contain" />
+            <img src={logoIconImg.src} alt="1CoFounder" className="h-9 w-9 rounded-xl object-contain" />
             <span className="text-xl font-bold text-gradient">1CoFounder</span>
           </div>
           <h1 className="text-2xl font-extrabold text-slate-900 mb-2">{user?.profile_complete ? 'Edit Your Profile' : 'Build Your Profile'}</h1>
