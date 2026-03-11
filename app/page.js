@@ -17,7 +17,7 @@ import {
   Briefcase, Stethoscope, ChevronRight,
   Sparkles, Shield, Globe, Zap, Search, Check,
   Handshake, Target, Clock, Eye, BadgeCheck, Brain,
-  Activity, BarChart3, Rocket, Bell, Flag, Ban, Settings, Mail
+  Activity, BarChart3, Rocket, Bell, Flag, Ban, Settings, Mail, Trash2, UserPlus, Edit3
 } from 'lucide-react';
 
 import logoHeaderImg from './logo-header.jpeg';
@@ -26,77 +26,12 @@ import logoIconImg from './logo-icon.jpeg';
 // ==========================================
 // CONSTANTS
 // ==========================================
-const ROLES = ['Doctor', 'Engineer', 'Researcher', 'Business Operator', 'Investor', 'Student'];
-const SKILLS_ONTOLOGY = {
-  'Clinical': ['Cardiology','Neurology','ICU Medicine','Emergency Medicine','Pediatrics','Oncology','Dermatology','Radiology','Psychiatry','Endocrinology','Public Health','Ophthalmology','Orthopedics','Anesthesiology','Pathology','Surgery','Internal Medicine','Family Medicine','Geriatrics','Nephrology'],
-  'Engineering': ['Machine Learning','AI Engineering','Computer Vision','Natural Language Processing','Data Engineering','Full Stack Development','Mobile Development','Cloud Architecture','DevOps','Cybersecurity','Backend Development','Frontend Development','Blockchain','Robotics','IoT'],
-  'Biomedical / Hardware': ['Biomedical Engineering','Medical Devices','Wearables','Biosensors','Embedded Systems','Signal Processing','Medical Imaging','3D Printing','Nanotechnology','Lab Automation'],
-  'Research': ['Clinical Research','Biostatistics','Bioinformatics','Genomics','Drug Discovery','Clinical Trials','Epidemiology','Health Data Science','Proteomics','Neuroscience'],
-  'Business / Startup': ['Product Management','Healthcare Operations','Startup Strategy','Fundraising','Regulatory Affairs','Market Access','Growth Marketing','Sales','Legal','Finance','Venture Capital','Operations Management'],
-  'Health System': ['Hospital Administration','Health Policy','Insurance Systems','Healthcare Economics','Public Health Programs','Quality Improvement','Supply Chain','Health Informatics','Telemedicine Operations','Patient Safety'],
-};
-const ALL_SKILLS = Object.values(SKILLS_ONTOLOGY).flat();
-
-const INTERESTS_ONTOLOGY = [
-  'AI Healthcare','Medical Devices','Digital Health','Diagnostics','Remote Monitoring',
-  'Mental Health',"Women's Health",'Chronic Disease','Telemedicine','Health Data',
-  'Clinical Workflow','Rural Healthcare','Hospital Automation','Preventive Medicine',
-  'Longevity','Precision Medicine','Public Health','Pediatric Health','Elder Care',
-  'Rehabilitation','Drug Delivery','Point-of-Care Testing','Health Equity',
-  'Surgical Innovation','Emergency Care','Dental Health','Dermatology Tech',
-  'Ophthalmology Tech','Fertility Tech','Sleep Health','Nutrition Tech',
-];
-
-const SKILLS = ALL_SKILLS; // backward-compat
+import {
+  ROLES, SKILLS_ONTOLOGY, ALL_SKILLS, INTERESTS_ONTOLOGY, STARTUP_STAGES,
+  COMMITMENT_LEVELS, LOOKING_FOR, PROBLEM_SKILLS, COUNTRIES, CITIES_BY_COUNTRY,
+} from './constants';
+const SKILLS = ALL_SKILLS;
 const INTERESTS = INTERESTS_ONTOLOGY;
-const STARTUP_STAGES = ['Idea', 'Problem Validation', 'MVP', 'Startup'];
-const COMMITMENT_LEVELS = ['Exploring', 'Part Time', 'Full Time'];
-const LOOKING_FOR = ['Clinician', 'AI Engineer', 'Software Engineer', 'Hardware Engineer', 'Product Manager', 'Business Operator'];
-
-const COUNTRIES = ['Afghanistan','Albania','Algeria','Andorra','Angola','Argentina','Armenia','Australia','Austria','Azerbaijan','Bahamas','Bahrain','Bangladesh','Barbados','Belarus','Belgium','Belize','Benin','Bhutan','Bolivia','Bosnia and Herzegovina','Botswana','Brazil','Brunei','Bulgaria','Burkina Faso','Burundi','Cambodia','Cameroon','Canada','Central African Republic','Chad','Chile','China','Colombia','Congo','Costa Rica','Croatia','Cuba','Cyprus','Czech Republic','Denmark','Djibouti','Dominican Republic','Ecuador','Egypt','El Salvador','Estonia','Eswatini','Ethiopia','Fiji','Finland','France','Gabon','Gambia','Georgia','Germany','Ghana','Greece','Guatemala','Guinea','Guyana','Haiti','Honduras','Hungary','Iceland','India','Indonesia','Iran','Iraq','Ireland','Israel','Italy','Jamaica','Japan','Jordan','Kazakhstan','Kenya','Kuwait','Kyrgyzstan','Laos','Latvia','Lebanon','Liberia','Libya','Lithuania','Luxembourg','Madagascar','Malawi','Malaysia','Maldives','Mali','Malta','Mauritania','Mauritius','Mexico','Moldova','Monaco','Mongolia','Montenegro','Morocco','Mozambique','Myanmar','Namibia','Nepal','Netherlands','New Zealand','Nicaragua','Niger','Nigeria','North Korea','North Macedonia','Norway','Oman','Pakistan','Palestine','Panama','Papua New Guinea','Paraguay','Peru','Philippines','Poland','Portugal','Qatar','Romania','Russia','Rwanda','Saudi Arabia','Senegal','Serbia','Sierra Leone','Singapore','Slovakia','Slovenia','Somalia','South Africa','South Korea','South Sudan','Spain','Sri Lanka','Sudan','Suriname','Sweden','Switzerland','Syria','Taiwan','Tajikistan','Tanzania','Thailand','Togo','Trinidad and Tobago','Tunisia','Turkey','Turkmenistan','Uganda','Ukraine','United Arab Emirates','United Kingdom','United States','Uruguay','Uzbekistan','Venezuela','Vietnam','Yemen','Zambia','Zimbabwe'];
-
-const CITIES_BY_COUNTRY = {
-  'India': ['Mumbai','Delhi','Bangalore','Hyderabad','Chennai','Kolkata','Pune','Ahmedabad','Jaipur','Lucknow','Chandigarh','Kochi','Indore','Bhopal','Nagpur','Coimbatore','Thiruvananthapuram','Gurgaon','Noida','Visakhapatnam'],
-  'United States': ['New York','San Francisco','Los Angeles','Chicago','Boston','Seattle','Austin','Houston','Philadelphia','San Diego','Denver','Atlanta','Miami','Dallas','Washington DC','San Jose','Portland','Minneapolis','Nashville','Raleigh'],
-  'United Kingdom': ['London','Manchester','Birmingham','Edinburgh','Glasgow','Bristol','Leeds','Liverpool','Cambridge','Oxford','Sheffield','Nottingham','Cardiff','Belfast','Newcastle'],
-  'Canada': ['Toronto','Vancouver','Montreal','Ottawa','Calgary','Edmonton','Winnipeg','Halifax','Quebec City','Victoria'],
-  'Germany': ['Berlin','Munich','Hamburg','Frankfurt','Cologne','Stuttgart','Düsseldorf','Dresden','Leipzig','Heidelberg'],
-  'Australia': ['Sydney','Melbourne','Brisbane','Perth','Adelaide','Canberra','Gold Coast','Hobart','Darwin','Newcastle'],
-  'Singapore': ['Singapore'],
-  'Japan': ['Tokyo','Osaka','Kyoto','Yokohama','Nagoya','Sapporo','Kobe','Fukuoka','Hiroshima','Sendai'],
-  'China': ['Beijing','Shanghai','Guangzhou','Shenzhen','Hangzhou','Chengdu','Wuhan','Nanjing','Tianjin','Xian'],
-  'France': ['Paris','Lyon','Marseille','Toulouse','Nice','Bordeaux','Strasbourg','Lille','Nantes','Montpellier'],
-  'Netherlands': ['Amsterdam','Rotterdam','The Hague','Utrecht','Eindhoven','Leiden','Groningen','Delft','Maastricht'],
-  'Switzerland': ['Zurich','Geneva','Basel','Bern','Lausanne','Lucerne','Lugano','St. Gallen'],
-  'Israel': ['Tel Aviv','Jerusalem','Haifa','Beer Sheva','Herzliya','Ramat Gan','Petah Tikva'],
-  'South Korea': ['Seoul','Busan','Incheon','Daejeon','Daegu','Gwangju','Suwon','Seongnam'],
-  'Brazil': ['São Paulo','Rio de Janeiro','Brasília','Belo Horizonte','Curitiba','Porto Alegre','Salvador','Recife','Campinas'],
-  'Nigeria': ['Lagos','Abuja','Port Harcourt','Ibadan','Kano','Enugu','Benin City','Kaduna'],
-  'South Africa': ['Johannesburg','Cape Town','Durban','Pretoria','Port Elizabeth','Bloemfontein'],
-  'Kenya': ['Nairobi','Mombasa','Kisumu','Nakuru','Eldoret'],
-  'United Arab Emirates': ['Dubai','Abu Dhabi','Sharjah','Ajman','Ras Al Khaimah'],
-  'Saudi Arabia': ['Riyadh','Jeddah','Mecca','Medina','Dammam','Khobar'],
-  'Mexico': ['Mexico City','Guadalajara','Monterrey','Puebla','Tijuana','Cancún'],
-  'Italy': ['Rome','Milan','Florence','Naples','Turin','Bologna','Venice','Genoa','Palermo'],
-  'Spain': ['Madrid','Barcelona','Valencia','Seville','Bilbao','Malaga','Zaragoza'],
-  'Sweden': ['Stockholm','Gothenburg','Malmö','Uppsala','Linköping','Lund'],
-  'Denmark': ['Copenhagen','Aarhus','Odense','Aalborg'],
-  'Norway': ['Oslo','Bergen','Trondheim','Stavanger'],
-  'Finland': ['Helsinki','Tampere','Turku','Oulu','Espoo'],
-  'Ireland': ['Dublin','Cork','Galway','Limerick','Waterford'],
-  'Poland': ['Warsaw','Kraków','Wrocław','Gdańsk','Poznań','Łódź','Katowice'],
-  'Turkey': ['Istanbul','Ankara','Izmir','Antalya','Bursa'],
-  'Egypt': ['Cairo','Alexandria','Giza','Luxor','Aswan'],
-  'Bangladesh': ['Dhaka','Chittagong','Khulna','Rajshahi','Sylhet'],
-  'Pakistan': ['Karachi','Lahore','Islamabad','Rawalpindi','Faisalabad','Peshawar'],
-  'Sri Lanka': ['Colombo','Kandy','Galle','Jaffna'],
-  'Malaysia': ['Kuala Lumpur','Penang','Johor Bahru','Kuching','Kota Kinabalu'],
-  'Thailand': ['Bangkok','Chiang Mai','Phuket','Pattaya','Khon Kaen'],
-  'Indonesia': ['Jakarta','Surabaya','Bandung','Bali','Yogyakarta','Medan'],
-  'Philippines': ['Manila','Cebu','Davao','Quezon City','Makati'],
-  'Vietnam': ['Ho Chi Minh City','Hanoi','Da Nang','Hai Phong','Can Tho'],
-  'Russia': ['Moscow','Saint Petersburg','Novosibirsk','Yekaterinburg','Kazan'],
-};
 
 const AVATAR_COLORS = ['bg-teal-500', 'bg-cyan-600', 'bg-emerald-500', 'bg-violet-500', 'bg-rose-500', 'bg-amber-500', 'bg-blue-500', 'bg-indigo-500'];
 const AVATAR_GRADIENT = [
@@ -1492,7 +1427,6 @@ function DiscoverView({ user, token, onChat }) {
 // ==========================================
 // MESSAGING VIEW
 // ==========================================
-const PROBLEM_SKILLS = ['AI Engineer', 'Clinician', 'Hardware Engineer', 'Product Manager', 'Software Engineer', 'Data Scientist', 'Researcher', 'Business Operator'];
 
 function formatTime(d) {
   if (!d) return '';
@@ -1695,7 +1629,7 @@ function MessagingView({ user, token }) {
 }
 
 // ==========================================
-// PROBLEMS VIEW
+// PROBLEMS VIEW (with All / My tabs)
 // ==========================================
 function ProblemsView({ user, token, onOpenChat }) {
   const [problems, setProblems] = useState([]);
@@ -1705,6 +1639,9 @@ function ProblemsView({ user, token, onOpenChat }) {
   const [submitting, setSubmitting] = useState(false);
   const [expandedId, setExpandedId] = useState(null);
   const [actionFeedback, setActionFeedback] = useState({});
+  const [tab, setTab] = useState('all');
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({});
 
   useEffect(() => {
     const load = async () => { try { const res = await api.get('problems', token); setProblems(res.problems || []); } catch (err) { console.error(err); } finally { setLoading(false); } };
@@ -1738,15 +1675,132 @@ function ProblemsView({ user, token, onOpenChat }) {
     } catch (err) { console.error(err); }
   };
 
+  const handleDelete = async (problemId) => {
+    if (!confirm('Are you sure you want to delete this problem?')) return;
+    const res = await api.del(`problems/${problemId}`, token);
+    if (res.success) setProblems(prev => prev.filter(p => p.id !== problemId));
+  };
+
+  const startEdit = (p) => {
+    setEditingId(p.id);
+    setEditForm({ title: p.title, description: p.description, clinical_context: p.clinical_context || '', skills_required: p.skills_required || [] });
+  };
+
+  const handleEdit = async (problemId) => {
+    const res = await api.put(`problems/${problemId}`, editForm, token);
+    if (res.success) {
+      setProblems(prev => prev.map(p => p.id === problemId ? { ...p, ...editForm } : p));
+      setEditingId(null);
+    }
+  };
+
+  const myProblems = problems.filter(p => p.creator_id === user?.id);
+  const displayProblems = tab === 'my' ? myProblems : problems;
+
+  const renderProblemCard = (p) => {
+    const isExpanded = expandedId === p.id;
+    const isCreator = p.creator_id === user?.id;
+    const feedback = actionFeedback[p.id];
+    const contactFeedback = actionFeedback[`contact_${p.id}`];
+    const isEditing = editingId === p.id;
+
+    return (
+      <div key={p.id} className="card-hover bg-white rounded-2xl shadow-sm border border-slate-100 p-6" data-testid={`problem-card-${p.id}`}>
+        <div className="flex items-start gap-4">
+          <div className={`w-11 h-11 rounded-xl ${getAvatarColor(p.creator?.name)} flex items-center justify-center text-white text-sm font-bold shrink-0`}>{getInitials(p.creator?.name)}</div>
+          <div className="flex-1 min-w-0">
+            {isEditing ? (
+              <div className="space-y-3">
+                <Input value={editForm.title} onChange={e => setEditForm({...editForm, title: e.target.value})} className="rounded-xl h-10 text-sm font-bold" />
+                <Textarea value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} rows={3} className="rounded-xl text-sm" />
+                <Textarea value={editForm.clinical_context} onChange={e => setEditForm({...editForm, clinical_context: e.target.value})} rows={2} className="rounded-xl text-sm" placeholder="Clinical context..." />
+                <div className="flex gap-2">
+                  <button onClick={() => handleEdit(p.id)} className="btn-gradient text-white text-xs font-semibold px-4 py-2 rounded-xl">Save</button>
+                  <Button size="sm" variant="outline" onClick={() => setEditingId(null)} className="rounded-xl text-xs">Cancel</Button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-start justify-between gap-2">
+                  <div><h3 className="font-bold text-slate-900 text-base leading-tight">{p.title}</h3><p className="text-xs text-slate-400 mt-1">{p.creator?.name} · {p.creator?.role} · {formatTime(p.created_at)}</p></div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {p.interest_count > 0 && <Badge className="bg-teal-50 text-teal-700 border-teal-200 text-xs rounded-full"><Users className="h-3 w-3 mr-1" />{p.interest_count}</Badge>}
+                    {isCreator && tab === 'my' && (
+                      <>
+                        <button data-testid={`edit-problem-${p.id}`} onClick={() => startEdit(p)} className="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors" title="Edit"><Eye className="h-3.5 w-3.5" /></button>
+                        <button data-testid={`delete-problem-${p.id}`} onClick={() => handleDelete(p.id)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Delete"><X className="h-3.5 w-3.5" /></button>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <p className={`text-sm text-slate-600 mt-3 leading-relaxed ${!isExpanded ? 'line-clamp-3' : ''}`}>{p.description}</p>
+                {isExpanded && p.clinical_context && (
+                  <div className="mt-3 bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-100 rounded-2xl p-4">
+                    <p className="text-xs font-bold text-teal-800 mb-1 flex items-center gap-1.5"><Stethoscope className="h-3.5 w-3.5" /> Clinical Context</p>
+                    <p className="text-sm text-teal-700 leading-relaxed">{p.clinical_context}</p>
+                  </div>
+                )}
+                {p.skills_required?.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-3">
+                    {p.skills_required.map(s => <Badge key={s} className={`text-xs font-medium rounded-lg border ${getTagColor(s)}`}>{s}</Badge>)}
+                  </div>
+                )}
+                {isExpanded && p.interested_users?.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-slate-100">
+                    <p className="text-xs font-semibold text-slate-400 mb-2">People interested:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {p.interested_users.map((iu, idx) => <div key={idx} className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-full"><div className={`w-5 h-5 rounded-full ${getAvatarColor(iu.user?.name)} flex items-center justify-center text-white text-[8px] font-bold`}>{getInitials(iu.user?.name)}</div><span className="text-xs text-slate-600">{iu.user?.name}</span></div>)}
+                    </div>
+                  </div>
+                )}
+                <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-100">
+                  <Button variant="ghost" size="sm" onClick={() => setExpandedId(isExpanded ? null : p.id)} className="text-xs text-slate-500 hover:text-slate-700 rounded-xl"><Eye className="h-3.5 w-3.5 mr-1" />{isExpanded ? 'Show Less' : 'View Details'}</Button>
+                  {!isCreator && (
+                    <>
+                      <Button size="sm" variant={p.user_interested ? 'secondary' : 'outline'} onClick={() => !p.user_interested && handleJoin(p.id)} disabled={p.user_interested} className="text-xs rounded-xl">
+                        {p.user_interested || feedback === 'joined' ? <><Check className="h-3.5 w-3.5 mr-1" />Joined</> : <><Plus className="h-3.5 w-3.5 mr-1" />Join Project</>}
+                      </Button>
+                      <button onClick={() => handleContact(p.id)} className="btn-gradient text-white text-xs font-semibold px-3 py-1.5 rounded-xl flex items-center gap-1"><MessageCircle className="h-3.5 w-3.5" />Contact Creator</button>
+                    </>
+                  )}
+                  {isCreator && tab === 'all' && <Badge className="bg-teal-50 text-teal-700 border-teal-200 text-xs rounded-lg">Your Problem</Badge>}
+                </div>
+                {contactFeedback && (
+                  <div className={`mt-2 text-xs px-3 py-2 rounded-xl font-medium ${
+                    contactFeedback === 'already_matched' ? 'bg-teal-50 text-teal-700' : contactFeedback === 'new_match' ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700'
+                  }`}>
+                    {contactFeedback === 'already_matched' && 'You are already matched! Go to Messages to chat.'}
+                    {contactFeedback === 'new_match' && "It's a match! You can now message the creator."}
+                    {contactFeedback === 'interest_sent' && 'Connection request sent!'}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8" data-testid="problems-page">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900">Post a Healthcare Problem</h1>
+          <h1 className="text-2xl font-extrabold text-slate-900">Healthcare Problems</h1>
           <p className="text-slate-500">Share challenges and find collaborators</p>
         </div>
         <button data-testid="post-problem-btn" onClick={() => setShowForm(!showForm)} className="btn-gradient text-white font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 text-sm">
           <Plus className="h-4 w-4" />{showForm ? 'Cancel' : 'Post Problem'}
+        </button>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 mb-6 bg-slate-100 p-1 rounded-xl w-fit" data-testid="problems-tabs">
+        <button data-testid="problems-tab-all" onClick={() => setTab('all')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+          All Problems <span className="ml-1 text-xs text-slate-400">({problems.length})</span>
+        </button>
+        <button data-testid="problems-tab-my" onClick={() => setTab('my')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'my' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+          My Problems <span className="ml-1 text-xs text-slate-400">({myProblems.length})</span>
         </button>
       </div>
 
@@ -1777,82 +1831,21 @@ function ProblemsView({ user, token, onOpenChat }) {
       )}
 
       {loading ? <div className="text-center py-12"><p className="text-slate-400">Loading problems...</p></div>
-      : problems.length === 0 ? (
+      : displayProblems.length === 0 ? (
         <div className="text-center py-16">
           <div className="w-20 h-20 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-5"><Lightbulb className="h-10 w-10 text-slate-300" /></div>
-          <h3 className="text-lg font-bold text-slate-900 mb-2">No Problems Posted Yet</h3>
-          <p className="text-slate-500">Be the first to share a healthcare challenge!</p>
+          <h3 className="text-lg font-bold text-slate-900 mb-2">{tab === 'my' ? 'No Problems Posted Yet' : 'No Problems Yet'}</h3>
+          <p className="text-slate-500">{tab === 'my' ? 'Post your first healthcare problem!' : 'Be the first to share a healthcare challenge!'}</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {problems.map(p => {
-            const isExpanded = expandedId === p.id;
-            const isCreator = p.creator_id === user?.id;
-            const feedback = actionFeedback[p.id];
-            const contactFeedback = actionFeedback[`contact_${p.id}`];
-            return (
-              <div key={p.id} className="card-hover bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                <div className="flex items-start gap-4">
-                  <div className={`w-11 h-11 rounded-xl ${getAvatarColor(p.creator?.name)} flex items-center justify-center text-white text-sm font-bold shrink-0`}>{getInitials(p.creator?.name)}</div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <div><h3 className="font-bold text-slate-900 text-base leading-tight">{p.title}</h3><p className="text-xs text-slate-400 mt-1">{p.creator?.name} · {p.creator?.role} · {formatTime(p.created_at)}</p></div>
-                      {p.interest_count > 0 && <Badge className="bg-teal-50 text-teal-700 border-teal-200 text-xs rounded-full shrink-0"><Users className="h-3 w-3 mr-1" />{p.interest_count}</Badge>}
-                    </div>
-                    <p className={`text-sm text-slate-600 mt-3 leading-relaxed ${!isExpanded ? 'line-clamp-3' : ''}`}>{p.description}</p>
-                    {isExpanded && p.clinical_context && (
-                      <div className="mt-3 bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-100 rounded-2xl p-4">
-                        <p className="text-xs font-bold text-teal-800 mb-1 flex items-center gap-1.5"><Stethoscope className="h-3.5 w-3.5" /> Clinical Context</p>
-                        <p className="text-sm text-teal-700 leading-relaxed">{p.clinical_context}</p>
-                      </div>
-                    )}
-                    {p.skills_required?.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mt-3">
-                        {p.skills_required.map(s => <Badge key={s} className={`text-xs font-medium rounded-lg border ${getTagColor(s)}`}>{s}</Badge>)}
-                      </div>
-                    )}
-                    {isExpanded && p.interested_users?.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-slate-100">
-                        <p className="text-xs font-semibold text-slate-400 mb-2">People interested:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {p.interested_users.map((iu, idx) => <div key={idx} className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-full"><div className={`w-5 h-5 rounded-full ${getAvatarColor(iu.user?.name)} flex items-center justify-center text-white text-[8px] font-bold`}>{getInitials(iu.user?.name)}</div><span className="text-xs text-slate-600">{iu.user?.name}</span></div>)}
-                        </div>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-100">
-                      <Button variant="ghost" size="sm" onClick={() => setExpandedId(isExpanded ? null : p.id)} className="text-xs text-slate-500 hover:text-slate-700 rounded-xl"><Eye className="h-3.5 w-3.5 mr-1" />{isExpanded ? 'Show Less' : 'View Details'}</Button>
-                      {!isCreator && (
-                        <>
-                          <Button size="sm" variant={p.user_interested ? 'secondary' : 'outline'} onClick={() => !p.user_interested && handleJoin(p.id)} disabled={p.user_interested} className="text-xs rounded-xl">
-                            {p.user_interested || feedback === 'joined' ? <><Check className="h-3.5 w-3.5 mr-1" />Joined</> : <><Plus className="h-3.5 w-3.5 mr-1" />Join Project</>}
-                          </Button>
-                          <button onClick={() => handleContact(p.id)} className="btn-gradient text-white text-xs font-semibold px-3 py-1.5 rounded-xl flex items-center gap-1"><MessageCircle className="h-3.5 w-3.5" />Contact Creator</button>
-                        </>
-                      )}
-                      {isCreator && <Badge className="bg-teal-50 text-teal-700 border-teal-200 text-xs rounded-lg">Your Problem</Badge>}
-                    </div>
-                    {contactFeedback && (
-                      <div className={`mt-2 text-xs px-3 py-2 rounded-xl font-medium ${
-                        contactFeedback === 'already_matched' ? 'bg-teal-50 text-teal-700' : contactFeedback === 'new_match' ? 'bg-green-50 text-green-700' : 'bg-blue-50 text-blue-700'
-                      }`}>
-                        {contactFeedback === 'already_matched' && 'You are already matched! Go to Messages to chat.'}
-                        {contactFeedback === 'new_match' && "It's a match! You can now message the creator."}
-                        {contactFeedback === 'interest_sent' && 'Connection request sent!'}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <div className="space-y-4">{displayProblems.map(renderProblemCard)}</div>
       )}
     </div>
   );
 }
 
 // ==========================================
-// PROJECTS VIEW
+// PROJECTS VIEW (Personal Collaboration Dashboard)
 // ==========================================
 function ProjectsView({ user, token }) {
   const [projects, setProjects] = useState([]);
@@ -1860,10 +1853,25 @@ function ProjectsView({ user, token }) {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: '', description: '', stage: 'Idea' });
   const [submitting, setSubmitting] = useState(false);
+  const [matches, setMatches] = useState([]);
+  const [inviteProject, setInviteProject] = useState(null);
+  const [expandedId, setExpandedId] = useState(null);
+  const [toast, setToast] = useState(null);
 
-  useEffect(() => {
-    const load = async () => { try { const res = await api.get('projects', token); setProjects(res.projects || []); } catch (err) { console.error(err); } finally { setLoading(false); } };
-    load();
+  const load = useCallback(async () => {
+    try {
+      const res = await api.get('projects', token);
+      setProjects(res.projects || []);
+    } catch (err) { console.error(err); } finally { setLoading(false); }
+  }, [token]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const loadMatches = useCallback(async () => {
+    try {
+      const res = await api.get('matches', token);
+      setMatches(res.matches || []);
+    } catch (err) { console.error(err); }
   }, [token]);
 
   const handleCreate = async () => {
@@ -1871,15 +1879,36 @@ function ProjectsView({ user, token }) {
     setSubmitting(true);
     try {
       const res = await api.post('projects', form, token);
-      if (res.project) { setProjects(prev => [{ ...res.project, members: [{ user_id: user.id, role: 'Creator', user: { name: user.name, role: user.role, id: user.id } }] }, ...prev]); setForm({ name: '', description: '', stage: 'Idea' }); setShowForm(false); }
+      if (res.project) {
+        setProjects(prev => [{ ...res.project, members: [{ user_id: user.id, role: 'Creator', user: { name: user.name, role: user.role, id: user.id } }] }, ...prev]);
+        setForm({ name: '', description: '', stage: 'Idea' });
+        setShowForm(false);
+      }
     } catch (err) { console.error(err); } finally { setSubmitting(false); }
   };
 
-  const handleJoin = async (projectId) => {
-    try {
-      const res = await api.post(`projects/${projectId}/join`, { role: user.role || 'Member' }, token);
-      if (res.member) { setProjects(prev => prev.map(p => p.id === projectId ? { ...p, members: [...(p.members || []), { user_id: user.id, role: res.member.role, user: { name: user.name, id: user.id, role: user.role } }] } : p)); }
-    } catch (err) { console.error(err); }
+  const handleDelete = async (projectId) => {
+    if (!confirm('Delete this project?')) return;
+    const res = await api.del(`projects/${projectId}`, token);
+    if (res.success) setProjects(prev => prev.filter(p => p.id !== projectId));
+  };
+
+  const openInvite = async (project) => {
+    setInviteProject(project);
+    await loadMatches();
+  };
+
+  const handleInvite = async (matchedUserId) => {
+    if (!inviteProject) return;
+    const res = await api.post(`projects/${inviteProject.id}/invite`, { user_id: matchedUserId }, token);
+    if (res.member) {
+      setProjects(prev => prev.map(p => p.id === inviteProject.id ? { ...p, members: [...(p.members || []), res.member] } : p));
+      setToast('Invitation sent!');
+      setTimeout(() => setToast(null), 3000);
+    } else if (res.error) {
+      setToast(res.error);
+      setTimeout(() => setToast(null), 3000);
+    }
   };
 
   const stageColors = {
@@ -1889,25 +1918,67 @@ function ProjectsView({ user, token }) {
     'Startup': 'bg-green-100 text-green-700 border-green-200',
   };
 
+  const getProgress = (stage) => {
+    const stageOrder = ['Idea', 'Problem Validation', 'MVP', 'Startup'];
+    const idx = stageOrder.indexOf(stage);
+    return idx < 0 ? 0 : ((idx + 1) / stageOrder.length) * 100;
+  };
+
   const milestones = [
     { label: 'Problem Validation', key: 'Problem Validation' },
     { label: 'MVP Development', key: 'MVP' },
     { label: 'Pilot Testing', key: 'Startup' },
   ];
 
-  const getProgress = (stage) => {
-    const stageOrder = ['Idea', 'Problem Validation', 'MVP', 'Startup'];
-    const idx = stageOrder.indexOf(stage);
-    if (idx < 0) return 0;
-    return ((idx + 1) / stageOrder.length) * 100;
-  };
-
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8" data-testid="projects-page">
-      <div className="flex items-center justify-between mb-8">
+      {toast && (
+        <div className="fixed top-20 right-4 z-50 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium bg-teal-50 border-teal-200 text-teal-700 animate-fade-in-up flex items-center gap-2">
+          <Check className="h-4 w-4" />{toast}
+          <button onClick={() => setToast(null)} className="ml-2 opacity-60 hover:opacity-100"><X className="h-3 w-3" /></button>
+        </div>
+      )}
+
+      {/* Invite Modal */}
+      {inviteProject && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" data-testid="invite-modal">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-lg text-slate-900">Invite to {inviteProject.name}</h3>
+              <button onClick={() => setInviteProject(null)} className="p-1.5 rounded-lg hover:bg-slate-100"><X className="h-4 w-4 text-slate-400" /></button>
+            </div>
+            <p className="text-sm text-slate-500 mb-4">Select a matched connection to invite:</p>
+            {matches.length === 0 ? (
+              <p className="text-sm text-slate-400 py-4 text-center">No matches yet. Start discovering co-founders!</p>
+            ) : (
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {matches.map(m => {
+                  const matchedUser = m.user1_id === user?.id ? m.user2 : m.user1;
+                  const alreadyMember = (inviteProject.members || []).some(mem => mem.user_id === matchedUser?.id);
+                  return (
+                    <div key={m.id} className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-9 h-9 rounded-xl ${getAvatarColor(matchedUser?.name)} flex items-center justify-center text-white text-xs font-bold`}>{getInitials(matchedUser?.name)}</div>
+                        <div><p className="text-sm font-medium text-slate-700">{matchedUser?.name}</p><p className="text-xs text-slate-400">{matchedUser?.role}</p></div>
+                      </div>
+                      {alreadyMember ? (
+                        <Badge className="bg-slate-100 text-slate-500 text-xs rounded-lg">Already invited</Badge>
+                      ) : (
+                        <button data-testid={`invite-user-${matchedUser?.id}`} onClick={() => handleInvite(matchedUser?.id)} className="btn-gradient text-white text-xs font-semibold px-3 py-1.5 rounded-xl flex items-center gap-1"><UserPlus className="h-3.5 w-3.5" />Invite</button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900">Healthcare Projects</h1>
-          <p className="text-slate-500">Join or create projects to build solutions</p>
+          <h1 className="text-2xl font-extrabold text-slate-900">My Projects</h1>
+          <p className="text-slate-500">Your personal collaboration dashboard</p>
         </div>
         <button data-testid="new-project-btn" onClick={() => setShowForm(!showForm)} className="btn-gradient text-white font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 text-sm">
           <Plus className="h-4 w-4" />{showForm ? 'Cancel' : 'New Project'}
@@ -1918,8 +1989,8 @@ function ProjectsView({ user, token }) {
         <Card className="mb-8 border-teal-200/50 shadow-xl shadow-teal-100/50 rounded-2xl">
           <CardContent className="p-6 space-y-4">
             <h3 className="font-bold text-lg text-slate-900">Create a Project</h3>
-            <div className="space-y-2"><Label className="text-slate-700">Project Name</Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="e.g., AI-Powered Triage System" className="rounded-xl h-11" /></div>
-            <div className="space-y-2"><Label className="text-slate-700">Description</Label><Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="What are you building?" rows={4} className="rounded-xl" /></div>
+            <div className="space-y-2"><Label className="text-slate-700">Project Name <span className="text-red-400">*</span></Label><Input value={form.name} onChange={e => setForm({...form, name: e.target.value})} placeholder="e.g., AI-Powered Triage System" className="rounded-xl h-11" /></div>
+            <div className="space-y-2"><Label className="text-slate-700">Description <span className="text-red-400">*</span></Label><Textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} placeholder="What are you building? Include the problem, target users, and vision." rows={4} className="rounded-xl" /></div>
             <div className="space-y-2">
               <Label className="text-slate-700">Stage</Label>
               <div className="flex flex-wrap gap-2">
@@ -1928,7 +1999,10 @@ function ProjectsView({ user, token }) {
                 ))}
               </div>
             </div>
-            <button onClick={handleCreate} disabled={submitting} className="btn-gradient text-white font-semibold px-6 py-2.5 rounded-xl disabled:opacity-50">{submitting ? 'Creating...' : 'Create Project'}</button>
+            <div className="flex gap-3 pt-2">
+              <button onClick={handleCreate} disabled={submitting || !form.name || !form.description} className="btn-gradient text-white font-semibold px-6 py-2.5 rounded-xl disabled:opacity-50">{submitting ? 'Creating...' : 'Create Project'}</button>
+              <Button variant="outline" onClick={() => setShowForm(false)} className="rounded-xl">Cancel</Button>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -1938,23 +2012,29 @@ function ProjectsView({ user, token }) {
         <div className="text-center py-16">
           <div className="w-20 h-20 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-5"><FolderKanban className="h-10 w-10 text-slate-300" /></div>
           <h3 className="text-lg font-bold text-slate-900 mb-2">No Projects Yet</h3>
-          <p className="text-slate-500">Create the first healthcare project!</p>
+          <p className="text-slate-500 mb-4">Create your first project and invite your co-founder matches!</p>
+          <button onClick={() => setShowForm(true)} className="btn-gradient text-white font-semibold px-6 py-2.5 rounded-xl text-sm"><Plus className="inline h-4 w-4 mr-1" />Create Project</button>
         </div>
       ) : (
         <div className="grid gap-5 md:grid-cols-2">
           {projects.map(p => {
-            const isMember = (p.members || []).some(m => m.user_id === user?.id);
+            const isCreator = p.creator_id === user?.id;
             const progress = getProgress(p.stage);
+            const isExpanded = expandedId === p.id;
             return (
-              <div key={p.id} className="card-hover bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                {/* Header */}
+              <div key={p.id} className="card-hover bg-white rounded-2xl shadow-sm border border-slate-100 p-6" data-testid={`project-card-${p.id}`}>
                 <div className="flex items-start justify-between mb-3">
                   <h3 className="font-bold text-slate-900 text-base">{p.name}</h3>
-                  <Badge className={`text-xs font-medium rounded-lg ${stageColors[p.stage] || 'bg-slate-100 text-slate-600'}`}>{p.stage}</Badge>
+                  <div className="flex items-center gap-1.5">
+                    <Badge className={`text-xs font-medium rounded-lg ${stageColors[p.stage] || 'bg-slate-100 text-slate-600'}`}>{p.stage}</Badge>
+                    {isCreator && (
+                      <button data-testid={`delete-project-${p.id}`} onClick={() => handleDelete(p.id)} className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
+                    )}
+                  </div>
                 </div>
-                <p className="text-sm text-slate-500 line-clamp-3 mb-4 leading-relaxed">{p.description}</p>
+                <p className={`text-sm text-slate-500 mb-4 leading-relaxed ${!isExpanded ? 'line-clamp-3' : ''}`}>{p.description}</p>
 
-                {/* Progress */}
+                {/* Progress bar */}
                 <div className="mb-4">
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Progress</span>
@@ -1963,40 +2043,60 @@ function ProjectsView({ user, token }) {
                   <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
                     <div className="btn-gradient h-2 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
                   </div>
-                  <div className="flex justify-between mt-2">
-                    {milestones.map((m, i) => {
-                      const stageOrder = ['Idea', 'Problem Validation', 'MVP', 'Startup'];
-                      const currentIdx = stageOrder.indexOf(p.stage);
-                      const milestoneIdx = stageOrder.indexOf(m.key);
-                      const completed = currentIdx >= milestoneIdx;
-                      return (
-                        <div key={i} className="flex items-center gap-1">
-                          <div className={`w-3 h-3 rounded-full flex items-center justify-center ${completed ? 'bg-teal-500' : 'bg-slate-200'}`}>
-                            {completed && <Check className="h-2 w-2 text-white" />}
+                  {isExpanded && (
+                    <div className="flex justify-between mt-2">
+                      {milestones.map((m, i) => {
+                        const stageOrder = ['Idea', 'Problem Validation', 'MVP', 'Startup'];
+                        const currentIdx = stageOrder.indexOf(p.stage);
+                        const milestoneIdx = stageOrder.indexOf(m.key);
+                        const completed = currentIdx >= milestoneIdx;
+                        return (
+                          <div key={i} className="flex items-center gap-1">
+                            <div className={`w-3 h-3 rounded-full flex items-center justify-center ${completed ? 'bg-teal-500' : 'bg-slate-200'}`}>{completed && <Check className="h-2 w-2 text-white" />}</div>
+                            <span className={`text-[10px] ${completed ? 'text-teal-600 font-medium' : 'text-slate-400'}`}>{m.label}</span>
                           </div>
-                          <span className={`text-[10px] ${completed ? 'text-teal-600 font-medium' : 'text-slate-400'}`}>{m.label}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* Team */}
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2 mb-3">
                   <Users className="h-3.5 w-3.5 text-slate-400" />
                   <span className="text-xs text-slate-500 font-medium">{(p.members || []).length} member(s)</span>
                 </div>
                 <div className="flex items-center gap-1 mb-4">
-                  {(p.members || []).slice(0, 5).map((m, i) => (
-                    <div key={i} className={`w-8 h-8 rounded-xl ${getAvatarColor(m.user?.name)} flex items-center justify-center text-white text-[9px] font-bold -ml-1 first:ml-0 border-2 border-white shadow-sm`}>{getInitials(m.user?.name)}</div>
+                  {(p.members || []).slice(0, 6).map((m, i) => (
+                    <div key={i} className={`w-8 h-8 rounded-xl ${getAvatarColor(m.user?.name)} flex items-center justify-center text-white text-[9px] font-bold -ml-1 first:ml-0 border-2 border-white shadow-sm`} title={`${m.user?.name} (${m.role})`}>{getInitials(m.user?.name)}</div>
                   ))}
+                  {(p.members || []).length > 6 && <span className="text-xs text-slate-400 ml-1">+{(p.members || []).length - 6}</span>}
                 </div>
 
-                {!isMember ? (
-                  <button onClick={() => handleJoin(p.id)} className="w-full btn-gradient text-white font-semibold py-2.5 rounded-xl text-sm">Join Project</button>
-                ) : (
-                  <Badge className="bg-teal-50 text-teal-700 border-teal-200 rounded-lg"><Check className="h-3 w-3 mr-1" />Member</Badge>
+                {isExpanded && (p.members || []).length > 0 && (
+                  <div className="mb-4 bg-slate-50 rounded-xl p-3 space-y-2">
+                    <p className="text-xs font-semibold text-slate-500">Team Members</p>
+                    {(p.members || []).map((m, i) => (
+                      <div key={i} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-6 h-6 rounded-lg ${getAvatarColor(m.user?.name)} flex items-center justify-center text-white text-[8px] font-bold`}>{getInitials(m.user?.name)}</div>
+                          <span className="text-xs text-slate-700">{m.user?.name}</span>
+                        </div>
+                        <Badge className="text-[10px] bg-slate-100 text-slate-500 rounded-full">{m.role}</Badge>
+                      </div>
+                    ))}
+                  </div>
                 )}
+
+                <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
+                  <Button variant="ghost" size="sm" onClick={() => setExpandedId(isExpanded ? null : p.id)} className="text-xs text-slate-500 hover:text-slate-700 rounded-xl">
+                    <Eye className="h-3.5 w-3.5 mr-1" />{isExpanded ? 'Less' : 'Details'}
+                  </Button>
+                  {isCreator && (
+                    <button data-testid={`invite-to-project-${p.id}`} onClick={() => openInvite(p)} className="btn-gradient text-white text-xs font-semibold px-3 py-1.5 rounded-xl flex items-center gap-1"><UserPlus className="h-3.5 w-3.5" />Invite Match</button>
+                  )}
+                  {!isCreator && <Badge className="bg-teal-50 text-teal-700 border-teal-200 rounded-lg text-xs"><Check className="h-3 w-3 mr-1" />Member</Badge>}
+                </div>
               </div>
             );
           })}

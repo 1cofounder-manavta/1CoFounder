@@ -440,9 +440,21 @@ export async function GET(request, { params }) {
       return json({ problems: enriched });
     }
 
-    // GET /api/projects
+    // GET /api/projects (personal - user's own + member of)
     if (path[0] === 'projects') {
-      const projects = await db.collection('projects').find({}).sort({ created_at: -1 }).limit(100).toArray();
+      const authUser = verifyAuth(request);
+      if (!authUser) return json({ error: 'Unauthorized' }, 401);
+      
+      // Find projects where user is a member
+      const memberships = await db.collection('project_members').find({ user_id: authUser.id }).toArray();
+      const memberProjectIds = memberships.map(m => m.project_id);
+      
+      // Find projects created by user OR where user is a member
+      const projects = await db.collection('projects')
+        .find({ $or: [{ creator_id: authUser.id }, { id: { $in: memberProjectIds } }] })
+        .sort({ created_at: -1 })
+        .toArray();
+      
       const projectIds = projects.map(p => p.id);
       const members = await db.collection('project_members').find({ project_id: { $in: projectIds } }).toArray();
       const memberUserIds = [...new Set(members.map(m => m.user_id))];
@@ -1051,6 +1063,26 @@ export async function POST(request, { params }) {
       return json({ project: cleanProject }, 201);
     }
 
+    // POST /api/projects/:id/invite (invite a matched user to project)
+    if (path[0] === 'projects' && path[1] && path[2] === 'invite') {
+      const authUser = verifyAuth(request);
+      if (!authUser) return json({ error: 'Unauthorized' }, 401);
+      const project = await db.collection('projects').findOne({ id: path[1] });
+      if (!project) return json({ error: 'Project not found' }, 404);
+      if (project.creator_id !== authUser.id) return json({ error: 'Only the creator can invite' }, 403);
+      const { user_id } = await request.json();
+      if (!user_id) return json({ error: 'user_id required' }, 400);
+      const existing = await db.collection('project_members').findOne({ project_id: path[1], user_id });
+      if (existing) return json({ error: 'User already a member' }, 409);
+      const member = { id: uuidv4(), project_id: path[1], user_id, role: 'Invited', joined_at: new Date().toISOString() };
+      await db.collection('project_members').insertOne(member);
+      // Create notification for invited user
+      await db.collection('notifications').insertOne({ id: uuidv4(), user_id, type: 'project_invite', message: `You've been invited to project "${project.name}"`, link: '/projects', read: false, created_at: new Date().toISOString() });
+      const invitedUser = await db.collection('users').findOne({ id: user_id });
+      const { _id: mId, ...cleanMember } = member;
+      return json({ member: { ...cleanMember, user: invitedUser ? { name: invitedUser.name, id: invitedUser.id, role: invitedUser.role } : null } }, 201);
+    }
+
     // POST /api/reports (user-facing report endpoint)
     if (path[0] === 'reports') {
       const authUser = verifyAuth(request);
@@ -1212,6 +1244,24 @@ export async function PUT(request, { params }) {
       return json({ success: true });
     }
 
+    // PUT /api/problems/:id (creator edit)
+    if (path[0] === 'problems' && path[1]) {
+      const authUser = verifyAuth(request);
+      if (!authUser) return json({ error: 'Unauthorized' }, 401);
+      const problem = await db.collection('problems').findOne({ id: path[1] });
+      if (!problem) return json({ error: 'Problem not found' }, 404);
+      if (problem.creator_id !== authUser.id) return json({ error: 'Not your problem' }, 403);
+      const { title, description, clinical_context, skills_required } = await request.json();
+      const updates = {};
+      if (title) updates.title = title;
+      if (description) updates.description = description;
+      if (clinical_context !== undefined) updates.clinical_context = clinical_context;
+      if (skills_required) updates.skills_required = skills_required;
+      updates.updated_at = new Date().toISOString();
+      await db.collection('problems').updateOne({ id: path[1] }, { $set: updates });
+      return json({ success: true });
+    }
+
     // PUT /api/admin/users/:id/verify
     if (path[0] === 'admin' && path[1] === 'users' && path[2] && path[3] === 'verify') {
       const admin = await verifyAdmin(request);
@@ -1277,6 +1327,18 @@ export async function DELETE(request, { params }) {
   const path = params.path || [];
   try {
     const db = await getDb();
+
+    // DELETE /api/problems/:id (creator delete)
+    if (path[0] === 'problems' && path[1]) {
+      const authUser = verifyAuth(request);
+      if (!authUser) return json({ error: 'Unauthorized' }, 401);
+      const problem = await db.collection('problems').findOne({ id: path[1] });
+      if (!problem) return json({ error: 'Problem not found' }, 404);
+      if (problem.creator_id !== authUser.id) return json({ error: 'Not your problem' }, 403);
+      await db.collection('problems').deleteOne({ id: path[1] });
+      await db.collection('problem_interests').deleteMany({ problem_id: path[1] });
+      return json({ success: true });
+    }
 
     // DELETE /api/admin/users/:id
     if (path[0] === 'admin' && path[1] === 'users' && path[2]) {
