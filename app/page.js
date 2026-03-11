@@ -563,12 +563,6 @@ function AuthView({ onAuth, justVerified }) {
               <p className="text-sm text-slate-500 mb-1">We sent a verification link to</p>
               <p className="text-sm font-semibold text-slate-700 mb-6" data-testid="verification-email">{verificationEmail}</p>
               <p className="text-xs text-slate-400 mb-6">Click the link in your email to verify your account and start finding co-founders. The link expires in 24 hours.</p>
-              {verifyLink && (
-                <div className="mb-4 bg-amber-50 border border-amber-200 rounded-xl p-3 text-left" data-testid="manual-verify-link">
-                  <p className="text-xs font-medium text-amber-800 mb-1">Email delivery issue? Verify manually:</p>
-                  <a href={verifyLink} className="text-xs text-teal-700 font-semibold hover:underline break-all">{verifyLink}</a>
-                </div>
-              )}
               <button
                 data-testid="resend-verification-btn"
                 onClick={handleResend}
