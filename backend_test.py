@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 
 # Base URL from environment
-BASE_URL = "https://cofounder-ready.preview.emergentagent.com/api"
+BASE_URL = "https://community-seeded.preview.emergentagent.com/api"
 
 def test_enhanced_messaging_and_problems():
     print("=== Testing Enhanced 1CoFounder.com Messaging and Problems Features ===\n")

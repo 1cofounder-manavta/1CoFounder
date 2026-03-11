@@ -2,7 +2,7 @@ import requests
 import json
 
 # Test the profile update functionality with city and country fields
-BASE_URL = "https://cofounder-ready.preview.emergentagent.com/api"
+BASE_URL = "https://community-seeded.preview.emergentagent.com/api"
 
 def test_profile_update():
     print("=== Testing Profile Update with City and Country Fields ===\n")

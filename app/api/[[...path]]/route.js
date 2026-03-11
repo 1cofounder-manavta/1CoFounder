@@ -755,12 +755,14 @@ export async function POST(request, { params }) {
 
       await db.collection('users').insertOne(user);
 
-      // Send verification email
+      // Send verification email in background (non-blocking)
       const verifyUrl = `${BASE_URL}/api/auth/verify?token=${verificationToken}`;
-      const sent = await sendEmail(user.email, 'Verify your 1CoFounder account', emailTemplate('Welcome to 1CoFounder!', `<p>Hi ${name},</p><p>Thanks for joining 1CoFounder! Please verify your email address to get started.</p><a href="${verifyUrl}" style="display:inline-block;background:#0f766e;color:white;font-weight:600;padding:12px 28px;border-radius:12px;text-decoration:none;margin:16px 0;">Verify Email</a><p style="font-size:12px;color:#94a3b8;">This link expires in 24 hours.</p>`));
+      sendEmail(user.email, 'Verify your 1CoFounder account', emailTemplate('Welcome to 1CoFounder!', `<p>Hi ${name},</p><p>Thanks for joining 1CoFounder! Please verify your email address.</p><a href="${verifyUrl}" style="display:inline-block;background:#0f766e;color:white;font-weight:600;padding:12px 28px;border-radius:12px;text-decoration:none;margin:16px 0;">Verify Email</a><p style="font-size:12px;color:#94a3b8;">This link expires in 24 hours.</p>`)).catch(() => {});
 
-      // Don't return token — user must verify email first
-      return json({ email_verification_required: true, email: user.email, verify_url: !sent ? verifyUrl : undefined }, 201);
+      // Return token directly — let users onboard immediately
+      const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+      const { password_hash: _ph, _id: _oid, verification_token: _vt, ...safeNewUser } = user;
+      return json({ token, user: safeNewUser }, 201);
     }
 
     // POST /api/auth/login
@@ -773,11 +775,6 @@ export async function POST(request, { params }) {
 
       const valid = await bcrypt.compare(password, user.password_hash);
       if (!valid) return json({ error: 'Invalid email or password' }, 401);
-
-      // Block unverified NEW users (requires_verification flag). Old users without this flag are grandfathered in.
-      if (user.requires_verification && !user.email_verified) {
-        return json({ email_verification_required: true, email: user.email }, 403);
-      }
 
       const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
       const { password_hash, _id, ...safeUser } = user;

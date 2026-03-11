@@ -2,7 +2,7 @@ import requests
 import json
 import uuid
 
-BASE_URL = "https://cofounder-ready.preview.emergentagent.com/api"
+BASE_URL = "https://community-seeded.preview.emergentagent.com/api"
 
 def test_fresh_reports_system():
     print("=== Testing Reports System with Fresh Users ===\n")

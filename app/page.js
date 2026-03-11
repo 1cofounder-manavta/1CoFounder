@@ -493,17 +493,7 @@ function LandingView({ onGetStarted, onViewPage }) {
 function AuthView({ onAuth, justVerified }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [verificationEmail, setVerificationEmail] = useState(null);
-  const [resendCooldown, setResendCooldown] = useState(0);
   const [verified, setVerified] = useState(justVerified || false);
-  const [verifyLink, setVerifyLink] = useState(null);
-
-  useEffect(() => {
-    if (resendCooldown > 0) {
-      const t = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
-      return () => clearTimeout(t);
-    }
-  }, [resendCooldown]);
 
   const handleSubmit = async (e, isLogin) => {
     e.preventDefault();
@@ -519,10 +509,7 @@ function AuthView({ onAuth, justVerified }) {
         : { name: data.name, email: data.email, password: data.password };
 
       const res = await api.post(endpoint, body);
-      if (res.email_verification_required) {
-        setVerificationEmail(res.email);
-        if (res.verify_url) setVerifyLink(res.verify_url);
-      } else if (res.error) {
+      if (res.error) {
         setError(res.error);
       } else {
         onAuth(res.token, res.user);
@@ -533,57 +520,6 @@ function AuthView({ onAuth, justVerified }) {
       setLoading(false);
     }
   };
-
-  const handleResend = async () => {
-    if (resendCooldown > 0) return;
-    const res = await api.post('auth/resend-verification', { email: verificationEmail });
-    if (res.success) {
-      setResendCooldown(60);
-      if (res.verify_url) {
-        setVerifyLink(res.verify_url);
-      }
-    }
-  };
-
-  // Email verification pending screen
-  if (verificationEmail) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4" data-testid="verification-pending-page">
-        <div className="w-full max-w-md text-center">
-          <div className="inline-flex items-center gap-2.5 mb-6">
-            <img src={logoIconImg.src} alt="1CoFounder" className="h-10 w-10 rounded-2xl object-contain shadow-lg shadow-teal-600/20" />
-            <span className="text-2xl font-bold text-gradient">1CoFounder</span>
-          </div>
-          <Card className="shadow-xl shadow-slate-200/50 border-0 rounded-2xl overflow-hidden">
-            <CardContent className="p-8">
-              <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-teal-50 flex items-center justify-center">
-                <Mail className="h-8 w-8 text-teal-600" />
-              </div>
-              <h2 className="text-xl font-bold text-slate-900 mb-2">Check your email</h2>
-              <p className="text-sm text-slate-500 mb-1">We sent a verification link to</p>
-              <p className="text-sm font-semibold text-slate-700 mb-6" data-testid="verification-email">{verificationEmail}</p>
-              <p className="text-xs text-slate-400 mb-6">Click the link in your email to verify your account and start finding co-founders. The link expires in 24 hours.</p>
-              <button
-                data-testid="resend-verification-btn"
-                onClick={handleResend}
-                disabled={resendCooldown > 0}
-                className="w-full btn-gradient text-white font-semibold py-3 rounded-xl disabled:opacity-50 transition-all mb-3"
-              >
-                {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Verification Email'}
-              </button>
-              <button
-                data-testid="back-to-login-btn"
-                onClick={() => { setVerificationEmail(null); setError(''); }}
-                className="w-full text-sm text-slate-500 hover:text-teal-700 font-medium py-2 transition-colors"
-              >
-                Back to Sign In
-              </button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4" data-testid="auth-page">
@@ -2440,6 +2376,7 @@ export default function App() {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
   const [justVerified, setJustVerified] = useState(false);
+  const [emailReminder, setEmailReminder] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -2475,6 +2412,11 @@ export default function App() {
     setUser(newUser);
     localStorage.setItem('1cf_token', newToken);
     setCurrentView(newUser.profile_complete ? 'discover' : 'profile');
+    // Show gentle email verification reminder for unverified users
+    if (!newUser.email_verified) {
+      setEmailReminder(true);
+      setTimeout(() => setEmailReminder(false), 8000);
+    }
   };
 
   const handleLogout = () => {
@@ -2500,6 +2442,16 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {emailReminder && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] max-w-md w-[90%] bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-4 py-3 shadow-lg flex items-center gap-3 animate-fade-in-up" data-testid="email-verify-reminder">
+          <Mail className="h-5 w-5 shrink-0 text-amber-600" />
+          <div className="flex-1 text-sm">
+            <p className="font-semibold">Verify your email</p>
+            <p className="text-xs text-amber-600">Check your inbox or go to Settings to resend the link</p>
+          </div>
+          <button onClick={() => setEmailReminder(false)} className="text-amber-400 hover:text-amber-700 transition-colors"><X className="h-4 w-4" /></button>
+        </div>
+      )}
       {user && !['landing', 'auth', ...legalPages].includes(currentView) && (
         <Navbar currentView={currentView} setView={setCurrentView} user={user} onLogout={handleLogout} />
       )}
