@@ -57,6 +57,16 @@ Build a nonprofit web platform for healthcare innovators to find co-founders. Fe
 - Admin panel API calls switched from `NEXT_PUBLIC_BASE_URL` to relative paths (`/api/...`) — prevents failures when env var is missing in production
 - Production build verified: all routes compile successfully with `output: 'standalone'`
 
+### Phase 7: Logo Fix + Email Verification ✅ (Completed Mar 11, 2026)
+- **Logo Fix**: Moved logos from `/public/` to static Next.js imports (`import logoHeaderImg from './logo-header.jpeg'`). Logos now bundled into `_next/static/media/` and work reliably in standalone production builds.
+- **Email Verification (New Users Only)**:
+  - Signup no longer auto-logs in. Returns `email_verification_required: true` and shows "Check your email" screen.
+  - Login blocks unverified new users (users with `requires_verification: true` flag).
+  - Old/existing users are grandfathered in — no verification required.
+  - Resend verification works without auth (accepts `{ email }` in request body).
+  - Verification link redirects to `/?verified=true` showing success banner.
+  - 60-second cooldown on resend button.
+
 ## Test Accounts
 - Regular: `priya@test.com` / `password123`
 - Regular: `rahul@test.com` / `password123`
