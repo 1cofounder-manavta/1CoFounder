@@ -59,7 +59,7 @@ Build a nonprofit web platform for healthcare innovators to find co-founders. Fe
 
 ### Phase 7: Logo Fix + Email Verification ✅ (Completed Mar 11, 2026)
 - **Logo Fix**: Moved logos from `/public/` to static Next.js imports. Logos now bundled into `_next/static/media/`.
-- **Email Verification (New Users Only)**: Signup blocks auto-login, shows verification screen. Old users grandfathered.
+- **Email Verification (Rolled back to optional, Feb 2026)**: Signup no longer blocks login. Users can verify later from Settings page. A gentle amber toast notification reminds unverified users after login/signup.
 
 ### Phase 8: Profile, Problems & Projects Upgrade ✅ (Completed Mar 11, 2026)
 - **Expanded Cities**: India now has 150+ cities (all metros, tier 1/2/3). 40+ countries with comprehensive city data.
@@ -83,3 +83,8 @@ Build a nonprofit web platform for healthcare innovators to find co-founders. Fe
 ## Backlog / Future Tasks
 - **P1**: Social Logins (Google/LinkedIn) — Requires user API keys
 - **P2**: Further UI/UX enhancements, user feedback integration
+
+### Phase 10: Database Seeding + Email Verification Rollback ✅ (Completed Feb 2026)
+- **Database Seeded**: 101 users (100 profiles + 1 admin), 20 problems, 8 projects with members. Seed script at `/app/scripts/seed.js`.
+- **Email Verification Rolled Back**: Removed mandatory email verification from signup/login. Users now onboard immediately. Verification moved to optional in Settings page. Gentle toast notification reminds unverified users.
+- **Seed Credentials**: Admin: `admin@1cofounder.ai` / `Admin@1cf2026`. All seed users: `Welcome@1cf`
