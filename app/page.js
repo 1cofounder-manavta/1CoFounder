@@ -17,7 +17,7 @@ import {
   Briefcase, Stethoscope, ChevronRight,
   Sparkles, Shield, Globe, Zap, Search, Check,
   Handshake, Target, Clock, Eye, BadgeCheck, Brain,
-  Activity, BarChart3, Rocket, Bell, Flag, Ban, Settings, Mail, Trash2, UserPlus, Edit3
+  Activity, BarChart3, Rocket, Bell, Flag, Ban, Settings, Mail, Trash2, UserPlus, Edit3, Menu
 } from 'lucide-react';
 
 import logoHeaderImg from './logo-header.jpeg';
@@ -158,6 +158,7 @@ function Navbar({ currentView, setView, user, onLogout }) {
   const [notifications, setNotifications] = useState([]);
   const [unread, setUnread] = useState(0);
   const [showNotifs, setShowNotifs] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const notifRef = useRef(null);
 
   const navItems = [
@@ -190,6 +191,8 @@ function Navbar({ currentView, setView, user, onLogout }) {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  useEffect(() => { setMobileOpen(false); }, [currentView]);
+
   const markAllRead = async () => {
     const token = localStorage.getItem('1cf_token');
     await api.post('notifications/read', {}, token);
@@ -199,33 +202,25 @@ function Navbar({ currentView, setView, user, onLogout }) {
 
   return (
     <nav className="sticky top-0 z-50 glass border-b border-white/40 shadow-sm" data-testid="main-navbar">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-        <button data-testid="nav-logo" onClick={() => setView('discover')} className="flex items-center gap-2.5 hover:opacity-80 transition-all duration-200">
-          <img src={logoHeaderImg.src} alt="Manavta | 1CoFounder" className="h-12 object-contain" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
+        <button data-testid="nav-logo" onClick={() => setView('discover')} className="flex items-center gap-2 hover:opacity-80 transition-all duration-200 shrink-0">
+          <img src={logoHeaderImg.src} alt="Manavta | 1CoFounder" className="h-9 sm:h-12 object-contain" />
         </button>
-        <div className="flex items-center gap-0.5">
+
+        {/* Desktop nav */}
+        <div className="hidden md:flex items-center gap-0.5">
           {navItems.map(item => {
             const Icon = item.icon;
             const isActive = currentView === item.id;
             return (
-              <button
-                key={item.id}
-                data-testid={`nav-${item.id}`}
-                onClick={() => setView(item.id)}
-                className={`relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  isActive
-                    ? 'bg-teal-700 text-white shadow-md shadow-teal-700/20'
-                    : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
-                }`}
-              >
+              <button key={item.id} data-testid={`nav-${item.id}`} onClick={() => setView(item.id)}
+                className={`relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${isActive ? 'bg-teal-700 text-white shadow-md shadow-teal-700/20' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'}`}>
                 <Icon className="h-4 w-4" />
-                <span className="hidden md:inline">{item.label}</span>
+                <span className="hidden lg:inline">{item.label}</span>
               </button>
             );
           })}
           <div className="w-px h-6 bg-slate-200 mx-1" />
-
-          {/* Notification Bell */}
           <div className="relative" ref={notifRef}>
             <button data-testid="nav-notifications" onClick={() => { setShowNotifs(!showNotifs); if (!showNotifs && unread > 0) markAllRead(); }} className="relative p-2 text-slate-400 hover:text-slate-700 transition-all rounded-xl hover:bg-slate-100">
               <Bell className="h-4 w-4" />
@@ -253,17 +248,72 @@ function Navbar({ currentView, setView, user, onLogout }) {
               </div>
             )}
           </div>
-
-          {/* Settings */}
           <button onClick={() => setView('settings')} data-testid="nav-settings" className="p-2 text-slate-400 hover:text-slate-700 transition-all rounded-xl hover:bg-slate-100">
             <Settings className="h-4 w-4" />
           </button>
-
           <button data-testid="nav-logout" onClick={onLogout} className="p-2 text-slate-400 hover:text-red-500 transition-all duration-200 rounded-xl hover:bg-red-50">
             <LogOut className="h-4 w-4" />
           </button>
         </div>
+
+        {/* Mobile nav controls */}
+        <div className="flex md:hidden items-center gap-1">
+          <div className="relative" ref={notifRef}>
+            <button data-testid="nav-notifications-mobile" onClick={() => { setShowNotifs(!showNotifs); if (!showNotifs && unread > 0) markAllRead(); }} className="relative p-2 text-slate-500 rounded-lg">
+              <Bell className="h-5 w-5" />
+              {unread > 0 && <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">{unread > 9 ? '9+' : unread}</span>}
+            </button>
+            {showNotifs && (
+              <div className="absolute right-0 top-full mt-2 w-72 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50" data-testid="notifications-dropdown-mobile">
+                <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                  <span className="text-sm font-bold text-slate-900">Notifications</span>
+                  {unread > 0 && <button onClick={markAllRead} className="text-xs text-teal-600 font-medium">Mark all read</button>}
+                </div>
+                <div className="max-h-60 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="p-4 text-center"><Bell className="h-6 w-6 text-slate-300 mx-auto mb-1" /><p className="text-xs text-slate-400">No notifications yet</p></div>
+                  ) : notifications.slice(0, 10).map(n => (
+                    <div key={n.id} className={`px-4 py-2.5 border-b border-slate-50 ${!n.read ? 'bg-teal-50/30' : ''}`}>
+                      <p className="text-xs font-medium text-slate-800">{n.message}</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">{new Date(n.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          <button data-testid="mobile-menu-btn" onClick={() => setMobileOpen(!mobileOpen)} className="p-2 text-slate-600 rounded-lg">
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
       </div>
+
+      {/* Mobile slide-down menu */}
+      {mobileOpen && (
+        <div className="md:hidden border-t border-slate-100 bg-white/95 backdrop-blur-lg shadow-lg" data-testid="mobile-menu">
+          <div className="px-3 py-2 space-y-0.5">
+            {navItems.map(item => {
+              const Icon = item.icon;
+              const isActive = currentView === item.id;
+              return (
+                <button key={item.id} data-testid={`mobile-nav-${item.id}`} onClick={() => { setView(item.id); setMobileOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${isActive ? 'bg-teal-700 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>
+                  <Icon className="h-5 w-5" />{item.label}
+                </button>
+              );
+            })}
+            <div className="border-t border-slate-100 my-1" />
+            <button onClick={() => { setView('settings'); setMobileOpen(false); }} data-testid="mobile-nav-settings"
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${currentView === 'settings' ? 'bg-teal-700 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>
+              <Settings className="h-5 w-5" />Settings
+            </button>
+            <button onClick={onLogout} data-testid="mobile-nav-logout"
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-all">
+              <LogOut className="h-5 w-5" />Sign Out
+            </button>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
@@ -1255,11 +1305,11 @@ function DiscoverView({ user, token, onChat }) {
   const stageColor = stageColors[currentProfile.startup_stage] || 'bg-slate-100 text-slate-600';
 
   return (
-    <div className="max-w-xl mx-auto px-4 py-6" data-testid="discover-page">
-      <div className="flex items-center justify-between mb-6">
+    <div className="max-w-xl mx-auto px-3 sm:px-4 py-4 sm:py-6" data-testid="discover-page">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900">Find Cofounders</h1>
-          <p className="text-sm text-slate-500">Sorted by compatibility with your profile</p>
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">Find Cofounders</h1>
+          <p className="text-xs sm:text-sm text-slate-500">Sorted by compatibility with your profile</p>
         </div>
         <Badge variant="outline" className="text-xs rounded-full px-3">{remaining} remaining</Badge>
       </div>
@@ -1518,7 +1568,7 @@ function MessagingView({ user, token }) {
   }
 
   return (
-    <div className="max-w-6xl mx-auto h-[calc(100vh-4rem)] flex bg-white rounded-t-2xl overflow-hidden border-x border-t border-slate-100 mt-1">
+    <div className="max-w-6xl mx-auto h-[calc(100vh-3.5rem)] sm:h-[calc(100vh-4rem)] flex bg-white rounded-t-2xl overflow-hidden border-x border-t border-slate-100 mt-1">
       {/* Conversation List */}
       <div className={`w-full md:w-96 border-r border-slate-100 flex flex-col ${activeConvo ? 'hidden md:flex' : 'flex'}`}>
         <div className="p-5 border-b border-slate-100">
@@ -1783,11 +1833,11 @@ function ProblemsView({ user, token, onOpenChat }) {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8" data-testid="problems-page">
-      <div className="flex items-center justify-between mb-6">
+    <div className="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-8" data-testid="problems-page">
+      <div className="flex items-start sm:items-center justify-between gap-2 mb-4 sm:mb-6">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900">Healthcare Problems</h1>
-          <p className="text-slate-500">Share challenges and find collaborators</p>
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900">Healthcare Problems</h1>
+          <p className="text-xs sm:text-sm text-slate-500">Share challenges and find collaborators</p>
         </div>
         <button data-testid="post-problem-btn" onClick={() => setShowForm(!showForm)} className="btn-gradient text-white font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 text-sm">
           <Plus className="h-4 w-4" />{showForm ? 'Cancel' : 'Post Problem'}
@@ -1931,7 +1981,7 @@ function ProjectsView({ user, token }) {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8" data-testid="projects-page">
+    <div className="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-8" data-testid="projects-page">
       {toast && (
         <div className="fixed top-20 right-4 z-50 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium bg-teal-50 border-teal-200 text-teal-700 animate-fade-in-up flex items-center gap-2">
           <Check className="h-4 w-4" />{toast}
@@ -2176,7 +2226,7 @@ function SettingsView({ user, token, onUpdate, onBack }) {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8" data-testid="settings-page">
+    <div className="max-w-4xl mx-auto px-3 sm:px-6 py-4 sm:py-8" data-testid="settings-page">
       {toast && (
         <div className={`fixed top-20 right-4 z-50 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium flex items-center gap-2 animate-fade-in-up ${toast.type === 'success' ? 'bg-teal-50 border-teal-200 text-teal-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
           {toast.type === 'success' ? <Check className="h-4 w-4" /> : <X className="h-4 w-4" />}
