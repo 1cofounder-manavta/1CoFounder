@@ -1,90 +1,75 @@
 # 1CoFounder.com - Product Requirements Document
 
-## Original Problem Statement
-Build a nonprofit web platform for healthcare innovators to find co-founders. Features include profile creation, co-founder discovery (swiping), matching, messaging, problem board, project hub, and admin panel.
+## Overview
+A nonprofit platform (Manavta Foundation initiative) connecting healthcare innovators — doctors, engineers, researchers, business operators — to find co-founders and collaborate on healthcare solutions.
 
-## Architecture
-- **Frontend**: Next.js 14, React, Tailwind CSS, Shadcn/UI. Monolithic SPA in `app/page.js` with view-switching via `currentView` state.
-- **Backend**: Next.js API Routes in `app/api/[[...path]]/route.js`. 
-- **Database**: MongoDB (Mongoose).
-- **Email**: Resend (transactional emails).
-- **Auth**: Custom JWT (token in localStorage as `1cf_token`).
+## Tech Stack
+- **Frontend**: Next.js 14, React, Tailwind CSS, Shadcn/UI
+- **Backend**: Next.js API Routes (modularized handlers)
+- **Database**: MongoDB with direct driver (no Mongoose)
+- **Email**: Resend (sandbox mode — only sends to `care@doormedcare.com`)
+- **Auth**: Custom JWT-based email/password
 
-## Core Files
-- `/app/app/page.js` - All user-facing frontend views
-- `/app/app/api/[[...path]]/route.js` - All backend API logic  
-- `/app/app/admin/page.js` - Admin panel (separate page)
-- `/app/.env` - Environment variables
-- `/app/next.config.js` - Next.js configuration (standalone output, MongoDB external package)
+## Architecture (Post-Modularization Feb 2026)
 
-## What's Been Implemented
+```
+/app
+├── app/
+│   ├── api/[[...path]]/
+│   │   ├── route.js              # Thin router (~90 lines) — dispatches to handlers
+│   │   ├── lib/
+│   │   │   ├── db.js             # MongoDB connection (cached)
+│   │   │   ├── auth.js           # JWT verification, admin check
+│   │   │   ├── email.js          # Resend email helpers
+│   │   │   └── utils.js          # json(), rate limiting, notifications, profile scoring
+│   │   └── handlers/
+│   │       ├── auth.js           # Signup, login, verify, resend-verification
+│   │       ├── users.js          # Discover, profile CRUD, block/unblock
+│   │       ├── social.js         # Swipes, matches, messages, conversations, reports
+│   │       ├── problems.js       # Problems CRUD + join/contact
+│   │       ├── projects.js       # Projects CRUD + join/invite
+│   │       ├── notifications.js  # Notifications list + mark read
+│   │       └── admin.js          # Dashboard, users, moderation, reports, activity logs
+│   ├── admin/page.js             # Admin panel frontend
+│   ├── lib/
+│   │   ├── api.js                # Shared API client (get/post/put/del)
+│   │   └── helpers.js            # Shared UI helpers, colors, formatters
+│   ├── constants.js              # Cities, skills, interests data
+│   ├── page.js                   # Main frontend (all user views)
+│   └── layout.js                 # Root layout
+├── public/                       # Static assets
+├── scripts/seed.js               # Database seeding script
+└── .env                          # Environment config
+```
 
-### Phase 1: Core MVP ✅
-- User auth (email/password), onboarding, profiles
-- Co-founder discovery with swipe mechanism
-- Matching and real-time messaging
-- Healthcare problem board
-- Project hub
+## Completed Features
+1. User auth (signup, login, JWT) with optional email verification
+2. Profile onboarding (4-step wizard with 300+ cities, skills, interests)
+3. Co-founder discovery (compatibility scoring, swipe mechanics)
+4. Mutual matching with notifications
+5. Real-time messaging between matches
+6. Problems page (All/My tabs, create/edit/delete, join/contact creator)
+7. Projects dashboard (create, invite matches, progress tracking)
+8. Admin panel (/admin) — users, problems, projects, reports, moderation
+9. Settings (account, password, notifications, privacy/blocks)
+10. Mobile-first responsive UI with hamburger menu
+11. Production-ready: rate limiting, cascading deletes, suspended user filtering
+12. Database seeded: 101 users, 20 problems, 8 projects
 
-### Phase 2: UI/UX & Branding ✅
-- Full visual redesign with teal/emerald theme
-- Brand logo integration (Manavta Foundation)
+## Phase History
+- Phase 1-6: Core MVP (auth, profiles, discovery, messaging, problems, projects)
+- Phase 7: Logo fix + email verification
+- Phase 8: Mobile-first UI overhaul
+- Phase 9: Data expansion (cities, skills) + feature overhaul (problems/projects)
+- Phase 10: DB seeding + email verification rollback to optional
+- Phase 11: Admin panel integration fix (cascade deletes, suspended user filtering)
+- Phase 12: **Codebase modularization** — Backend split from 1400-line monolith to 12 focused modules
 
-### Phase 3: Admin Panel ✅
-- Dashboard with 9 analytics stat cards
-- User management (search, filter, verify, suspend, delete)
-- Content moderation (problems, projects, reports)
-- Activity logs
+## Credentials
+- Admin: `admin@1cofounder.ai` / `Admin@1cf2026`
+- Seed users: `[name]@seed.1cofounder` / `Welcome@1cf`
 
-### Phase 4: Onboarding V2 ✅
-- Searchable multi-select for skills (grouped by category)
-- Searchable multi-select for interests
-- Dynamic country/city dropdowns
-
-### Phase 5: Production Readiness ✅ (Completed Mar 10, 2026)
-- **Backend**: Email verification, notifications, rate limiting, blocking, reporting, settings endpoints, profile completeness
-- **Frontend Integration** (Fixed Mar 10, 2026):
-  - Settings page integrated inline (Account, Password, Notifications, Privacy tabs)
-  - Legal pages integrated inline (Terms, Privacy Policy, Community Guidelines)
-  - Report & Block buttons fixed on Discover cards (was using undefined `idx` variable)
-  - Notification dropdown already working in navbar
-  - Admin dashboard already displaying all analytics
-  - Cleaned up redundant standalone page files
-
-### Phase 6: Deployment Fixes ✅ (Fixed Mar 10, 2026)
-- Health check endpoint (`/api/health`) moved outside MongoDB connection dependency — prevents Kubernetes restart loops when DB is slow
-- MongoDB `getDb()` connection with error handling, retry on failure, and configurable timeouts (10s connect, 10s server selection)
-- Admin panel API calls switched from `NEXT_PUBLIC_BASE_URL` to relative paths (`/api/...`) — prevents failures when env var is missing in production
-- Production build verified: all routes compile successfully with `output: 'standalone'`
-
-### Phase 7: Logo Fix + Email Verification ✅ (Completed Mar 11, 2026)
-- **Logo Fix**: Moved logos from `/public/` to static Next.js imports. Logos now bundled into `_next/static/media/`.
-- **Email Verification (Rolled back to optional, Feb 2026)**: Signup no longer blocks login. Users can verify later from Settings page. A gentle amber toast notification reminds unverified users after login/signup.
-
-### Phase 8: Profile, Problems & Projects Upgrade ✅ (Completed Mar 11, 2026)
-- **Expanded Cities**: India now has 150+ cities (all metros, tier 1/2/3). 40+ countries with comprehensive city data.
-- **Expanded Skills**: 13 categories (Clinical, Nursing, AI/ML, Software, Data, Biomedical, Research, Product/Design, Business, Operations, Regulatory, Finance, Public Health) with 250+ total skills.
-- **Expanded Interests**: 60+ healthcare interests spanning Digital Health, Devices, Specialties, Drug Innovation, Systems, Frontier Tech, Business.
-- **Expanded Looking-For**: 30+ roles (up from 6).
-- **Problems Page**: Split into "All Problems" (public) and "My Problems" (personal with edit/delete).
-- **Projects Page**: Converted to personal collaboration dashboard. Only shows user's own projects + projects invited to. "Invite Match" feature to invite matched connections to projects.
-- **Backend**: Added PUT/DELETE for problems (creator only), project invite endpoint, filtered projects query.
-
-### Phase 9: Mobile-First Responsive UI ✅ (Completed Mar 11, 2026)
-- Mobile hamburger menu with slide-down navigation (hidden on md+ screens)
-- Bell icon + hamburger on mobile navbar; full icon bar on desktop
-- Reduced padding/font sizes on mobile (px-3, text-xl, py-4)
-- Discover, Problems, Projects, Settings, Messaging all mobile-optimized
-- Messaging view height adjusted for mobile navbar (h-14 vs h-16)
-- Regular: `priya@test.com` / `password123`
-- Regular: `rahul@test.com` / `password123`
-- Admin: `admin@1cofounder.com` / `admin123`
-
-## Backlog / Future Tasks
-- **P1**: Social Logins (Google/LinkedIn) — Requires user API keys
-- **P2**: Further UI/UX enhancements, user feedback integration
-
-### Phase 10: Database Seeding + Email Verification Rollback ✅ (Completed Feb 2026)
-- **Database Seeded**: 101 users (100 profiles + 1 admin), 20 problems, 8 projects with members. Seed script at `/app/scripts/seed.js`.
-- **Email Verification Rolled Back**: Removed mandatory email verification from signup/login. Users now onboard immediately. Verification moved to optional in Settings page. Gentle toast notification reminds unverified users.
-- **Seed Credentials**: Admin: `admin@1cofounder.ai` / `Admin@1cf2026`. All seed users: `Welcome@1cf`
+## Backlog
+- **P1**: Social Logins (Google/LinkedIn)
+- **P2**: UI/UX enhancements, user feedback
+- **P2**: Domain verification for Resend (real email delivery)
