@@ -58,14 +58,17 @@ Build a nonprofit web platform for healthcare innovators to find co-founders. Fe
 - Production build verified: all routes compile successfully with `output: 'standalone'`
 
 ### Phase 7: Logo Fix + Email Verification ✅ (Completed Mar 11, 2026)
-- **Logo Fix**: Moved logos from `/public/` to static Next.js imports (`import logoHeaderImg from './logo-header.jpeg'`). Logos now bundled into `_next/static/media/` and work reliably in standalone production builds.
-- **Email Verification (New Users Only)**:
-  - Signup no longer auto-logs in. Returns `email_verification_required: true` and shows "Check your email" screen.
-  - Login blocks unverified new users (users with `requires_verification: true` flag).
-  - Old/existing users are grandfathered in — no verification required.
-  - Resend verification works without auth (accepts `{ email }` in request body).
-  - Verification link redirects to `/?verified=true` showing success banner.
-  - 60-second cooldown on resend button.
+- **Logo Fix**: Moved logos from `/public/` to static Next.js imports. Logos now bundled into `_next/static/media/`.
+- **Email Verification (New Users Only)**: Signup blocks auto-login, shows verification screen. Old users grandfathered.
+
+### Phase 8: Profile, Problems & Projects Upgrade ✅ (Completed Mar 11, 2026)
+- **Expanded Cities**: India now has 150+ cities (all metros, tier 1/2/3). 40+ countries with comprehensive city data.
+- **Expanded Skills**: 13 categories (Clinical, Nursing, AI/ML, Software, Data, Biomedical, Research, Product/Design, Business, Operations, Regulatory, Finance, Public Health) with 250+ total skills.
+- **Expanded Interests**: 60+ healthcare interests spanning Digital Health, Devices, Specialties, Drug Innovation, Systems, Frontier Tech, Business.
+- **Expanded Looking-For**: 30+ roles (up from 6).
+- **Problems Page**: Split into "All Problems" (public) and "My Problems" (personal with edit/delete).
+- **Projects Page**: Converted to personal collaboration dashboard. Only shows user's own projects + projects invited to. "Invite Match" feature to invite matched connections to projects.
+- **Backend**: Added PUT/DELETE for problems (creator only), project invite endpoint, filtered projects query.
 
 ## Test Accounts
 - Regular: `priya@test.com` / `password123`
