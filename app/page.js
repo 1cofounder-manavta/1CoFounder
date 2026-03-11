@@ -490,21 +490,13 @@ function LandingView({ onGetStarted, onViewPage }) {
 // ==========================================
 // AUTH VIEW
 // ==========================================
-function AuthView({ onAuth }) {
+function AuthView({ onAuth, justVerified }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [verificationEmail, setVerificationEmail] = useState(null);
   const [resendCooldown, setResendCooldown] = useState(0);
-  const [verified, setVerified] = useState(false);
+  const [verified, setVerified] = useState(justVerified || false);
   const [verifyLink, setVerifyLink] = useState(null);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('verified') === 'true') {
-      setVerified(true);
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-  }, []);
 
   useEffect(() => {
     if (resendCooldown > 0) {
@@ -2453,6 +2445,16 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [justVerified, setJustVerified] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('verified') === 'true') {
+      setCurrentView('auth');
+      setJustVerified(true);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   useEffect(() => {
     const savedToken = localStorage.getItem('1cf_token');
@@ -2508,7 +2510,7 @@ export default function App() {
         <Navbar currentView={currentView} setView={setCurrentView} user={user} onLogout={handleLogout} />
       )}
       {currentView === 'landing' && <LandingView onGetStarted={() => setCurrentView('auth')} onViewPage={setCurrentView} />}
-      {currentView === 'auth' && <AuthView onAuth={handleAuth} />}
+      {currentView === 'auth' && <AuthView onAuth={handleAuth} justVerified={justVerified} />}
       {currentView === 'profile' && <ProfileView user={user} token={token} onUpdate={handleProfileUpdate} />}
       {currentView === 'discover' && <DiscoverView user={user} token={token} onChat={openChat} />}
       {currentView === 'matches' && <MessagingView user={user} token={token} />}
