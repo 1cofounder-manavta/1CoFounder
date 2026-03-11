@@ -71,10 +71,16 @@ async function logAdminAction(db, adminId, action, targetType, targetId, details
 // EMAIL HELPER
 // ==========================================
 async function sendEmail(to, subject, html) {
-  if (!resend) { console.log(`[EMAIL SKIP] No Resend key. To: ${to}, Subject: ${subject}`); return; }
+  if (!resend) { console.log(`[EMAIL SKIP] No Resend key. To: ${to}, Subject: ${subject}`); return false; }
   try {
-    await resend.emails.send({ from: SENDER_EMAIL, to: [to], subject, html });
-  } catch (e) { console.error(`[EMAIL ERROR] ${e.message}`); }
+    const result = await resend.emails.send({ from: SENDER_EMAIL, to: [to], subject, html });
+    if (result.error) {
+      console.error(`[EMAIL ERROR] ${result.error.message}`);
+      return false;
+    }
+    console.log(`[EMAIL SENT] To: ${to}, Subject: ${subject}`);
+    return true;
+  } catch (e) { console.error(`[EMAIL ERROR] ${e.message}`); return false; }
 }
 
 function emailTemplate(title, body) {
@@ -751,10 +757,10 @@ export async function POST(request, { params }) {
 
       // Send verification email
       const verifyUrl = `${BASE_URL}/api/auth/verify?token=${verificationToken}`;
-      sendEmail(user.email, 'Verify your 1CoFounder account', emailTemplate('Welcome to 1CoFounder!', `<p>Hi ${name},</p><p>Thanks for joining 1CoFounder! Please verify your email address to get started.</p><a href="${verifyUrl}" style="display:inline-block;background:#0f766e;color:white;font-weight:600;padding:12px 28px;border-radius:12px;text-decoration:none;margin:16px 0;">Verify Email</a><p style="font-size:12px;color:#94a3b8;">This link expires in 24 hours.</p>`));
+      const sent = await sendEmail(user.email, 'Verify your 1CoFounder account', emailTemplate('Welcome to 1CoFounder!', `<p>Hi ${name},</p><p>Thanks for joining 1CoFounder! Please verify your email address to get started.</p><a href="${verifyUrl}" style="display:inline-block;background:#0f766e;color:white;font-weight:600;padding:12px 28px;border-radius:12px;text-decoration:none;margin:16px 0;">Verify Email</a><p style="font-size:12px;color:#94a3b8;">This link expires in 24 hours.</p>`));
 
       // Don't return token — user must verify email first
-      return json({ email_verification_required: true, email: user.email }, 201);
+      return json({ email_verification_required: true, email: user.email, verify_url: !sent ? verifyUrl : undefined }, 201);
     }
 
     // POST /api/auth/login
@@ -1182,8 +1188,8 @@ export async function POST(request, { params }) {
       const newExpires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
       await db.collection('users').updateOne({ id: user.id }, { $set: { verification_token: newToken, verification_expires: newExpires } });
       const verifyUrl = `${BASE_URL}/api/auth/verify?token=${newToken}`;
-      sendEmail(user.email, 'Verify your 1CoFounder account', emailTemplate('Verify Your Email', `<p>Hi ${user.name},</p><p>Click below to verify your email address.</p><a href="${verifyUrl}" style="display:inline-block;background:#0f766e;color:white;font-weight:600;padding:12px 28px;border-radius:12px;text-decoration:none;margin:16px 0;">Verify Email</a><p style="font-size:12px;color:#94a3b8;">This link expires in 24 hours.</p>`));
-      return json({ success: true });
+      const sent = await sendEmail(user.email, 'Verify your 1CoFounder account', emailTemplate('Verify Your Email', `<p>Hi ${user.name},</p><p>Click below to verify your email address.</p><a href="${verifyUrl}" style="display:inline-block;background:#0f766e;color:white;font-weight:600;padding:12px 28px;border-radius:12px;text-decoration:none;margin:16px 0;">Verify Email</a><p style="font-size:12px;color:#94a3b8;">This link expires in 24 hours.</p>`));
+      return json({ success: true, email_sent: sent, verify_url: !sent ? verifyUrl : undefined });
     }
 
     return json({ error: 'Not found' }, 404);

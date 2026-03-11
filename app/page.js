@@ -496,6 +496,7 @@ function AuthView({ onAuth }) {
   const [verificationEmail, setVerificationEmail] = useState(null);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [verified, setVerified] = useState(false);
+  const [verifyLink, setVerifyLink] = useState(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -528,6 +529,7 @@ function AuthView({ onAuth }) {
       const res = await api.post(endpoint, body);
       if (res.email_verification_required) {
         setVerificationEmail(res.email);
+        if (res.verify_url) setVerifyLink(res.verify_url);
       } else if (res.error) {
         setError(res.error);
       } else {
@@ -543,7 +545,12 @@ function AuthView({ onAuth }) {
   const handleResend = async () => {
     if (resendCooldown > 0) return;
     const res = await api.post('auth/resend-verification', { email: verificationEmail });
-    if (res.success) setResendCooldown(60);
+    if (res.success) {
+      setResendCooldown(60);
+      if (res.verify_url) {
+        setVerifyLink(res.verify_url);
+      }
+    }
   };
 
   // Email verification pending screen
@@ -564,6 +571,12 @@ function AuthView({ onAuth }) {
               <p className="text-sm text-slate-500 mb-1">We sent a verification link to</p>
               <p className="text-sm font-semibold text-slate-700 mb-6" data-testid="verification-email">{verificationEmail}</p>
               <p className="text-xs text-slate-400 mb-6">Click the link in your email to verify your account and start finding co-founders. The link expires in 24 hours.</p>
+              {verifyLink && (
+                <div className="mb-4 bg-amber-50 border border-amber-200 rounded-xl p-3 text-left" data-testid="manual-verify-link">
+                  <p className="text-xs font-medium text-amber-800 mb-1">Email delivery issue? Verify manually:</p>
+                  <a href={verifyLink} className="text-xs text-teal-700 font-semibold hover:underline break-all">{verifyLink}</a>
+                </div>
+              )}
               <button
                 data-testid="resend-verification-btn"
                 onClick={handleResend}
