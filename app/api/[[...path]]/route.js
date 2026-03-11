@@ -410,7 +410,10 @@ export async function GET(request, { params }) {
     // GET /api/problems
     if (path[0] === 'problems') {
       const authUser = verifyAuth(request);
-      const problems = await db.collection('problems').find({}).sort({ created_at: -1 }).limit(100).toArray();
+      // Get suspended user IDs to filter their problems
+      const suspendedUsers = await db.collection('users').find({ is_suspended: true }).project({ id: 1, _id: 0 }).toArray();
+      const suspendedIds = suspendedUsers.map(u => u.id);
+      const problems = await db.collection('problems').find(suspendedIds.length ? { creator_id: { $nin: suspendedIds } } : {}).sort({ created_at: -1 }).limit(100).toArray();
       const creatorIds = [...new Set(problems.map(p => p.creator_id))];
       const creators = await db.collection('users')
         .find({ id: { $in: creatorIds } })
@@ -1355,6 +1358,10 @@ export async function DELETE(request, { params }) {
       await db.collection('swipes').deleteMany({ $or: [{ swiper_id: path[2] }, { target_id: path[2] }] });
       await db.collection('matches').deleteMany({ $or: [{ user1_id: path[2] }, { user2_id: path[2] }] });
       await db.collection('messages').deleteMany({ sender_id: path[2] });
+      await db.collection('problems').deleteMany({ creator_id: path[2] });
+      await db.collection('projects').deleteMany({ creator_id: path[2] });
+      await db.collection('project_members').deleteMany({ user_id: path[2] });
+      await db.collection('notifications').deleteMany({ user_id: path[2] });
       await logAdminAction(db, admin.id, 'deleted_user', 'user', path[2], `Admin deleted user ${user.name} (${user.email})`);
       return json({ success: true });
     }
